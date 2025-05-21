@@ -41,6 +41,10 @@ The inspiration behind this project comes entirely from the excellent open-sourc
    - Automatically wakes the scooter if it’s in hibernation before sending lock/unlock commands.
    - Gracefully handles timeouts and notifies the user if waking fails.
 
+8. **Debug Menu**
+   - Long press on the "unu scooter pro" title to open a debug interface.
+   - Send arbitrary commands directly to the scooter for troubleshooting.
+
 ## Architecture Overview
 
 - **`UnuScooterManager`**  

@@ -291,6 +291,15 @@ class UnuScooterManager: NSObject, ObservableObject {
         }
     }
     
+     func sendCustomCommand(_ command: String) {
+         guard let characteristic = commandCharacteristic,
+               let scooter = scooter else { return }
+
+         if let data = command.data(using: .ascii) {
+             scooter.writeValue(data, for: characteristic, type: .withResponse)
+         }
+     }
+    
     // MARK: - Private Helpers
     
     /// Wakes the scooter from hibernation if the hibernation characteristic is available

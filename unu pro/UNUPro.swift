@@ -1,5 +1,5 @@
 //
-//  UNUApp.swift
+//  UNUPro.swift
 //  unu pro
 //
 //  Created by Lasse on 23.01.25.
@@ -9,7 +9,7 @@ import SwiftUI
 import SwiftData
 
 @main
-struct UNUApp: App {
+struct UNUPro: App {
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
             Item.self,

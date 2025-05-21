@@ -7,26 +7,26 @@
 	objects = {
 
 /* Begin PBXFileReference section */
-		0AE0190F2D429D7700026AEC /* UNU.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = UNU.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		0AE0190F2D429D7700026AEC /* unu pro.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "unu pro.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		0AE019242D429FB200026AEC /* Exceptions for "UNU" folder in "UNU" target */ = {
+		0AE019242D429FB200026AEC /* Exceptions for "unu pro" folder in "unu pro" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
 			);
-			target = 0AE0190E2D429D7700026AEC /* UNU */;
+			target = 0AE0190E2D429D7700026AEC /* unu pro */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		0AE019112D429D7700026AEC /* UNU */ = {
+		0AE019112D429D7700026AEC /* unu pro */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				0AE019242D429FB200026AEC /* Exceptions for "UNU" folder in "UNU" target */,
+				0AE019242D429FB200026AEC /* Exceptions for "unu pro" folder in "unu pro" target */,
 			);
-			path = UNU;
+			path = "unu pro";
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -45,7 +45,7 @@
 		0AE019062D429D7700026AEC = {
 			isa = PBXGroup;
 			children = (
-				0AE019112D429D7700026AEC /* UNU */,
+				0AE019112D429D7700026AEC /* unu pro */,
 				0AE019102D429D7700026AEC /* Products */,
 			);
 			sourceTree = "<group>";
@@ -53,7 +53,7 @@
 		0AE019102D429D7700026AEC /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				0AE0190F2D429D7700026AEC /* UNU.app */,
+				0AE0190F2D429D7700026AEC /* unu pro.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -61,9 +61,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		0AE0190E2D429D7700026AEC /* UNU */ = {
+		0AE0190E2D429D7700026AEC /* unu pro */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 0AE019202D429D7800026AEC /* Build configuration list for PBXNativeTarget "UNU" */;
+			buildConfigurationList = 0AE019202D429D7800026AEC /* Build configuration list for PBXNativeTarget "unu pro" */;
 			buildPhases = (
 				0AE0190B2D429D7700026AEC /* Sources */,
 				0AE0190C2D429D7700026AEC /* Frameworks */,
@@ -74,13 +74,13 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				0AE019112D429D7700026AEC /* UNU */,
+				0AE019112D429D7700026AEC /* unu pro */,
 			);
-			name = UNU;
+			name = "unu pro";
 			packageProductDependencies = (
 			);
 			productName = UNU;
-			productReference = 0AE0190F2D429D7700026AEC /* UNU.app */;
+			productReference = 0AE0190F2D429D7700026AEC /* unu pro.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -98,7 +98,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 0AE0190A2D429D7700026AEC /* Build configuration list for PBXProject "UNU" */;
+			buildConfigurationList = 0AE0190A2D429D7700026AEC /* Build configuration list for PBXProject "unu pro" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -112,7 +112,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				0AE0190E2D429D7700026AEC /* UNU */,
+				0AE0190E2D429D7700026AEC /* unu pro */,
 			);
 		};
 /* End PBXProject section */
@@ -257,15 +257,16 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = UNU/UNU.entitlements;
+				CODE_SIGN_ENTITLEMENTS = "unu pro/unu pro.entitlements";
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "\"UNU/Preview Content\"";
+				DEVELOPMENT_ASSET_PATHS = "\"unu pro/Preview Content\"";
 				DEVELOPMENT_TEAM = GDBX745Z3V;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = UNU/Info.plist;
+				INFOPLIST_FILE = "unu pro/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "unu pro";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "We need Bluetooth access to connect to your UNU scooter";
@@ -285,8 +286,9 @@
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = io.blomenkemper.UNU;
+				PRODUCT_BUNDLE_IDENTIFIER = io.blomenkemper.unupro;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = auto;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
@@ -302,15 +304,16 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = UNU/UNU.entitlements;
+				CODE_SIGN_ENTITLEMENTS = "unu pro/unu pro.entitlements";
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "\"UNU/Preview Content\"";
+				DEVELOPMENT_ASSET_PATHS = "\"unu pro/Preview Content\"";
 				DEVELOPMENT_TEAM = GDBX745Z3V;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = UNU/Info.plist;
+				INFOPLIST_FILE = "unu pro/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "unu pro";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "We need Bluetooth access to connect to your UNU scooter";
@@ -330,8 +333,9 @@
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = io.blomenkemper.UNU;
+				PRODUCT_BUNDLE_IDENTIFIER = io.blomenkemper.unupro;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = auto;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
@@ -345,7 +349,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		0AE0190A2D429D7700026AEC /* Build configuration list for PBXProject "UNU" */ = {
+		0AE0190A2D429D7700026AEC /* Build configuration list for PBXProject "unu pro" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				0AE0191E2D429D7800026AEC /* Debug */,
@@ -354,7 +358,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		0AE019202D429D7800026AEC /* Build configuration list for PBXNativeTarget "UNU" */ = {
+		0AE019202D429D7800026AEC /* Build configuration list for PBXNativeTarget "unu pro" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				0AE019212D429D7800026AEC /* Debug */,

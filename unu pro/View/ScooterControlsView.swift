@@ -10,6 +10,7 @@ import SwiftUI
 struct ScooterControlsView: View {
     @StateObject private var scooterManager = UnuScooterManager()
     @State private var showBatteryDetails = false
+    @State private var showDebugMenu = false
     
     // For the custom drag gesture on the lock slider
     @GestureState private var dragState = DragState.inactive
@@ -32,6 +33,9 @@ struct ScooterControlsView: View {
                 .font(.title.bold())
                 .foregroundStyle(.primary)
                 .frame(maxWidth: .infinity, alignment: .leading)
+                .onLongPressGesture {
+                    showDebugMenu = true
+                }
             
             HStack {
                 Circle()
@@ -192,6 +196,9 @@ struct ScooterControlsView: View {
         .onDisappear {
             // Stop the state update timer if we leave this screen
             scooterManager.stopStateUpdateTimer()
+        }
+        .sheet(isPresented: $showDebugMenu) {
+            DebugMenuView(scooterManager: scooterManager)
         }
         // Battery details sheet
         .sheet(isPresented: $showBatteryDetails) {
