@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct ScooterControlsView: View {
-    @StateObject private var scooterManager = UnuScooterManager()
+    @EnvironmentObject var scooterManager: UnuScooterManager
     @State private var showBatteryDetails = false
     @State private var showDebugMenu = false
     
@@ -186,17 +186,6 @@ struct ScooterControlsView: View {
             }
             .padding(20)
         }
-        .onAppear {
-            // Start scanning once view appears if not connected
-            if !scooterManager.isConnected {
-                scooterManager.startScanning()
-            }
-            scooterManager.startStateUpdateTimer()
-        }
-        .onDisappear {
-            // Stop the state update timer if we leave this screen
-            scooterManager.stopStateUpdateTimer()
-        }
         .sheet(isPresented: $showDebugMenu) {
             DebugMenuView(scooterManager: scooterManager)
         }
@@ -220,6 +209,9 @@ struct ScooterControlsView: View {
                 scooterManager.restartAndLock()
             }
         }
+        .onAppear() {
+            scooterManager.startScanning()
+        }
     }
 }
 
@@ -236,7 +228,7 @@ struct BlinkingImage: View {
             .font(.title2)
             .foregroundStyle(.yellow)
             .opacity(isBlinking ? (isVisible ? 1 : 0.3) : 1)
-            .onChange(of: isBlinking) { newValue in
+            .onChange(of: isBlinking) { _, newValue in
                 if newValue {
                     withAnimation(Animation.easeInOut(duration: 0.5).repeatForever()) {
                         isVisible.toggle()
