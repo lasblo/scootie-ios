@@ -221,7 +221,7 @@ struct BlinkingImage: View {
             .font(.title2)
             .foregroundStyle(.yellow)
             .opacity(isBlinking ? (isVisible ? 1 : 0.3) : 1)
-            .onChange(of: isBlinking) { newValue in
+            .onChange(of: isBlinking) { _, newValue in
                 if newValue {
                     withAnimation(Animation.easeInOut(duration: 0.5).repeatForever()) {
                         isVisible.toggle()

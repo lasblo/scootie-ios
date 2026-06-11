@@ -23,6 +23,7 @@ class UnuScooterManager: NSObject, ObservableObject {
     @Published private(set) var bluetoothState: CBManagerState = .unknown
     @Published private(set) var currentState: ScooterState = .disconnected
     @Published private(set) var pendingStartScan = false
+    @Published private(set) var connectionPhase: ConnectionPhase = .idle
     
     
     @Published var hazardLightsOn = false
@@ -92,8 +93,21 @@ class UnuScooterManager: NSObject, ObservableObject {
         .standby, .parked, .unlocked, .riding, .charging, .linking
     ]
     
+    // MARK: - Connection Phase
+
+    /// High-level phase of the onboarding connection flow, used to drive the UI
+    /// unambiguously instead of inferring state from several separate flags.
+    enum ConnectionPhase: Equatable {
+        case idle
+        case scanning
+        case connecting
+        case pairing
+        case connected
+        case failed(String)   // user-facing reason
+    }
+
     // MARK: - Scooter State
-    
+
     enum ScooterState: Equatable, Hashable {
         case standby
         case unlocked
@@ -203,6 +217,7 @@ class UnuScooterManager: NSObject, ObservableObject {
         print("🔍 startScanning() - Scanning for Scooter...")
         statusMessage = "Searching..."
         isScanning = true
+        connectionPhase = .scanning
         
         // Unfiltered scan
         centralManager.scanForPeripherals(
@@ -216,12 +231,14 @@ class UnuScooterManager: NSObject, ObservableObject {
             self.centralManager.stopScan()
             self.isScanning = false
             self.statusMessage = "No scooter found."
+            self.connectionPhase = .failed("No scooter found.")
         }
     }
-    
+
     func stopScanning() {
         centralManager.stopScan()
         isScanning = false
+        connectionPhase = .idle
     }
     
     func disconnect() {
@@ -312,6 +329,7 @@ class UnuScooterManager: NSObject, ObservableObject {
         needsPairing = true
         isPairing = true
         statusMessage = "Please enter pairing code shown on scooter"
+        connectionPhase = .pairing
         print("❌ Insufficient encryption")
     }
     
@@ -384,7 +402,7 @@ class UnuScooterManager: NSObject, ObservableObject {
     func restartAndLock() {
         Task {
             // Attempt to unlock (which wakes the scooter if possible)
-            await unlock()
+            unlock()
             let awake = await waitForScooterState(.standby, timeout: 30)
             if !awake {
                 showLockFailedAlert(message: """
@@ -393,7 +411,7 @@ class UnuScooterManager: NSObject, ObservableObject {
                 return
             }
             // Now try to lock again
-            await lock()
+            lock()
         }
     }
     
@@ -444,7 +462,11 @@ class UnuScooterManager: NSObject, ObservableObject {
     func startStateUpdateTimer() {
         stopStateUpdateTimer()
         stateUpdateTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { [weak self] _ in
-            self?.verifyConnectionState()
+            // The timer fires on the main run loop, so it is safe to assume the
+            // main actor and call the @MainActor-isolated manager directly.
+            MainActor.assumeIsolated {
+                self?.verifyConnectionState()
+            }
         }
     }
     
@@ -523,7 +545,7 @@ class UnuScooterManager: NSObject, ObservableObject {
 
 // MARK: - CBCentralManagerDelegate
 
-extension UnuScooterManager: CBCentralManagerDelegate {
+extension UnuScooterManager: @preconcurrency CBCentralManagerDelegate {
     func centralManagerDidUpdateState(_ central: CBCentralManager) {
         bluetoothState = central.state
         print("centralManagerDidUpdateState: \(central.state.rawValue)")
@@ -586,8 +608,18 @@ extension UnuScooterManager: CBCentralManagerDelegate {
         centralManager.stopScan()
         isScanning = false
         statusMessage = "Connecting..."
+        connectionPhase = .connecting
         if let scooter = scooter {
             centralManager.connect(scooter, options: nil)
+
+            // Timeout if the connection (or subsequent pairing) never completes.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 15) { [weak self] in
+                guard let self = self, self.connectionPhase == .connecting else { return }
+                self.centralManager.cancelPeripheralConnection(scooter)
+                self.scooter = nil
+                self.statusMessage = "Couldn't connect. Try again."
+                self.connectionPhase = .failed("Couldn't connect. Try again.")
+            }
         }
     }
     
@@ -613,7 +645,8 @@ extension UnuScooterManager: CBCentralManagerDelegate {
                        error: Error?) {
         print("❌ Failed to connect: \(error?.localizedDescription ?? "Unknown error")")
         statusMessage = "Connection failed."
-        
+        connectionPhase = .failed("Connection failed.")
+
         if peripheral == self.scooter {
             self.scooter = nil
             isConnected = false
@@ -624,17 +657,30 @@ extension UnuScooterManager: CBCentralManagerDelegate {
                        didDisconnectPeripheral peripheral: CBPeripheral,
                        error: Error?) {
         print("📵 Disconnected: \(error?.localizedDescription ?? "No error")")
-        if (peripheral == self.scooter && !isPairing) {
+        guard peripheral == self.scooter else { return }
+
+        if isPairing {
+            // A disconnect mid-pairing means the user cancelled or mistyped the
+            // system pairing dialog. Reset so onboarding can offer a clean retry.
+            print("⚠️ Disconnected during pairing — treating as pairing failure")
+            isPairing = false
+            needsPairing = false
             isConnected = false
-            statusMessage = (error == nil) ? "Disconnected" : "Connection lost"
             self.scooter = nil
+            statusMessage = "Pairing failed. Please try again."
+            connectionPhase = .failed("Pairing failed. Please try again.")
+            return
         }
+
+        isConnected = false
+        statusMessage = (error == nil) ? "Disconnected" : "Connection lost"
+        self.scooter = nil
     }
 }
 
 // MARK: - CBPeripheralDelegate
 
-extension UnuScooterManager: CBPeripheralDelegate {
+extension UnuScooterManager: @preconcurrency CBPeripheralDelegate {
     func peripheral(_ peripheral: CBPeripheral,
                     didDiscoverServices error: Error?) {
         if let error = error {
@@ -754,6 +800,7 @@ extension UnuScooterManager: CBPeripheralDelegate {
         needsPairing = false
         isPairing = false
         isConnected = true
+        connectionPhase = .connected
         print("🔓 Pairing successful, connection established")
         
         guard let data = characteristic.value else {
