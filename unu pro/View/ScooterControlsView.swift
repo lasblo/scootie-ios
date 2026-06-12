@@ -34,7 +34,7 @@ struct ScooterControlsView: View {
             // into the thumb zone; still scrolls on very small screens.
             GeometryReader { geo in
                 ScrollView {
-                    VStack(spacing: 18) {
+                    VStack(spacing: 22) {
                         masthead
                         displayPanel          // hero card grows to fill the height
                         HStack(spacing: 14) {
@@ -161,7 +161,7 @@ struct ScooterControlsView: View {
                     .resizable()
                     .scaledToFit()
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .padding(.horizontal, 14)
+                    .padding(.horizontal, 36)
                     .padding(.vertical, 10)
 
                 // Battery instrument along the base — tap the panel for details.
