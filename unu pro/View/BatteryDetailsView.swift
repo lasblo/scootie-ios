@@ -14,6 +14,26 @@ struct BatteryDetailsView: View {
     let auxPercent: Int
     let isCharging: Bool
 
+    private struct Battery: Identifiable {
+        var id: String { title }
+        let title: String
+        let percent: Int
+        var charging: Bool = false
+    }
+
+    // A 0% reading means the scooter doesn't report that pack — hide it.
+    private var main: [Battery] {
+        [Battery(title: "PRIMARY", percent: primaryPercent),
+         Battery(title: "SECONDARY", percent: secondaryPercent)]
+            .filter { $0.percent > 0 }
+    }
+    private var system: [Battery] {
+        [Battery(title: "CBB", percent: cbbPercent, charging: isCharging),
+         Battery(title: "AUX", percent: auxPercent)]
+            .filter { $0.percent > 0 }
+    }
+    private var hasAny: Bool { !main.isEmpty || !system.isEmpty }
+
     var body: some View {
         ZStack {
             DeckTheme.paper.ignoresSafeArea()
@@ -21,13 +41,18 @@ struct BatteryDetailsView: View {
             VStack(alignment: .leading, spacing: 16) {
                 header
 
-                sectionLabel("MAIN")
-                batteryRow("PRIMARY", primaryPercent)
-                batteryRow("SECONDARY", secondaryPercent)
-
-                sectionLabel("SYSTEM")
-                batteryRow("CBB", cbbPercent, charging: isCharging)
-                batteryRow("AUX", auxPercent)
+                if hasAny {
+                    if !main.isEmpty {
+                        sectionLabel("MAIN")
+                        ForEach(main) { batteryRow($0) }
+                    }
+                    if !system.isEmpty {
+                        sectionLabel("SYSTEM")
+                        ForEach(system) { batteryRow($0) }
+                    }
+                } else {
+                    emptyState
+                }
 
                 Spacer(minLength: 0)
             }
@@ -70,24 +95,45 @@ struct BatteryDetailsView: View {
             .padding(.top, 4)
     }
 
+    // MARK: - Empty state
+
+    private var emptyState: some View {
+        VStack(spacing: 10) {
+            Image(systemName: "bolt.slash.fill")
+                .font(.system(size: 30, weight: .black))
+                .foregroundStyle(DeckTheme.ink.opacity(0.5))
+            Text("NO BATTERY DATA")
+                .deckLabel(13)
+                .foregroundStyle(DeckTheme.ink)
+            Text("Connect your scooter to see battery levels.")
+                .font(.footnote.weight(.medium))
+                .foregroundStyle(DeckTheme.ink.opacity(0.6))
+                .multilineTextAlignment(.center)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 28)
+        .padding(.horizontal, 16)
+        .deckPanel(fill: DeckTheme.panel)
+    }
+
     // MARK: - Row
 
-    private func batteryRow(_ title: String, _ percent: Int, charging: Bool = false) -> some View {
+    private func batteryRow(_ battery: Battery) -> some View {
         HStack(spacing: 14) {
-            Text(title)
+            Text(battery.title)
                 .deckLabel(14)
                 .foregroundStyle(DeckTheme.ink)
                 .frame(width: 96, alignment: .leading)
 
-            gauge(percent)
+            gauge(battery.percent)
 
-            if charging {
+            if battery.charging {
                 Image(systemName: "bolt.fill")
                     .font(.system(size: 13, weight: .black))
                     .foregroundStyle(DeckTheme.ink)
             }
 
-            Text("\(percent)%")
+            Text("\(battery.percent)%")
                 .deckLabel(16)
                 .foregroundStyle(DeckTheme.ink)
                 .frame(width: 50, alignment: .trailing)

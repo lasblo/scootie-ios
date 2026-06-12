@@ -145,7 +145,8 @@ struct ScooterControlsView: View {
                     HStack(spacing: 5) {
                         Image(systemName: scooterManager.cbbIsCharging ? "bolt.fill" : "battery.100")
                             .font(.system(size: 11, weight: .black))
-                        Text(scooterManager.isConnected ? "\(scooterManager.primaryBatteryPercent)%" : "--")
+                        Text(scooterManager.isConnected && scooterManager.primaryBatteryPercent > 0
+                             ? "\(scooterManager.primaryBatteryPercent)%" : "--")
                             .deckLabel(12)
                     }
                     .foregroundStyle(DeckTheme.onLime)
