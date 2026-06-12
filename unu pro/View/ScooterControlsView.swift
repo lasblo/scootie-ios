@@ -42,6 +42,7 @@ struct ScooterControlsView: View {
                             storageTile
                             hazardTile
                         }
+                        Spacer(minLength: 16)
                     }
                     .padding(.horizontal, 18)
                     .padding(.top, 6)
