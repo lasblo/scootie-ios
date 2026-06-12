@@ -11,6 +11,7 @@ struct ScooterControlsView: View {
     @EnvironmentObject var scooterManager: UnuScooterManager
     @State private var showBatteryDetails = false
     @State private var showDebugMenu = false
+    @State private var showSettings = false
 
     // For the custom drag gesture on the lock slider
     @GestureState private var dragState = DragState.inactive
@@ -65,6 +66,9 @@ struct ScooterControlsView: View {
         .sheet(isPresented: $showDebugMenu) {
             DebugMenuView(scooterManager: scooterManager)
         }
+        .sheet(isPresented: $showSettings) {
+            SettingsView()
+        }
         .sheet(isPresented: $showBatteryDetails) {
             BatteryDetailsView(
                 primaryPercent: scooterManager.primaryBatteryPercent,
@@ -111,6 +115,21 @@ struct ScooterControlsView: View {
             if canRetry {
                 retryButton
             }
+
+            settingsButton
+        }
+    }
+
+    private var settingsButton: some View {
+        Button {
+            showSettings = true
+        } label: {
+            Image(systemName: "gearshape.fill")
+                .font(.system(size: 15, weight: .black))
+                .foregroundStyle(DeckTheme.ink)
+                .frame(width: 40, height: 40)
+                .background(RoundedRectangle(cornerRadius: 8).fill(DeckTheme.panel))
+                .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(DeckTheme.ink, lineWidth: 2))
         }
     }
 
@@ -155,15 +174,32 @@ struct ScooterControlsView: View {
 
     // MARK: - Scooter display panel
 
+    private static let relativeFormatter: RelativeDateTimeFormatter = {
+        let f = RelativeDateTimeFormatter()
+        f.unitsStyle = .full
+        return f
+    }()
+
+    private var lastSeenText: String {
+        if scooterManager.isConnected { return "CONNECTED" }
+        guard let seen = scooterManager.lastSeen else { return "NOT CONNECTED YET" }
+        return "LAST SEEN " + Self.relativeFormatter.localizedString(for: seen, relativeTo: Date()).uppercased()
+    }
+
     private var displayPanel: some View {
         Button {
             showBatteryDetails = true
         } label: {
             VStack(spacing: 0) {
-                HStack {
-                    Text("YOUR RIDE")
-                        .deckLabel(12)
-                        .foregroundStyle(DeckTheme.ink)
+                HStack(alignment: .top) {
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text("YOUR RIDE")
+                            .deckLabel(12)
+                            .foregroundStyle(DeckTheme.ink)
+                        Text(lastSeenText)
+                            .deckLabel(10, weight: .bold)
+                            .foregroundStyle(DeckTheme.ink.opacity(0.5))
+                    }
 
                     Spacer()
 

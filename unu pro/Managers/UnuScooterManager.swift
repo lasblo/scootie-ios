@@ -38,9 +38,28 @@ class UnuScooterManager: NSObject, ObservableObject {
     // Alert handling (for lock/wake issues)
     @Published var showLockAlert = false
     @Published var lockAlertMessage = ""
-    
+
+    // Last time we had a live connection to the scooter (persisted).
+    @Published private(set) var lastSeen: Date?
+
+    // Armed on app-open when auto-unlock is enabled; consumed once we read RSSI.
+    private var pendingAutoUnlock = false
+
+    // MARK: - Settings (read from UserDefaults)
+
+    private var autoUnlockEnabled: Bool {
+        UserDefaults.standard.bool(forKey: SettingsKeys.autoUnlock)
+    }
+    private var autoUnlockMinRSSI: Int {
+        (UserDefaults.standard.object(forKey: SettingsKeys.autoUnlockMinRSSI) as? Int)
+            ?? SettingsKeys.defaultMinRSSI
+    }
+    private var autoOpenSeatOnUnlock: Bool {
+        UserDefaults.standard.bool(forKey: SettingsKeys.autoOpenSeat)
+    }
+
     // MARK: - Private Properties
-    
+
     private var centralManager: CBCentralManager!
     private var scooter: CBPeripheral?
     
@@ -163,8 +182,18 @@ class UnuScooterManager: NSObject, ObservableObject {
     
     override init() {
         super.init()
+        if let t = UserDefaults.standard.object(forKey: SettingsKeys.lastSeen) as? Double {
+            lastSeen = Date(timeIntervalSince1970: t)
+        }
         centralManager = CBCentralManager(delegate: self, queue: nil)
         setupAppLifecycleObservers()
+    }
+
+    /// Record that we currently have a live connection (persisted for "last seen").
+    private func markSeen() {
+        let now = Date()
+        lastSeen = now
+        UserDefaults.standard.set(now.timeIntervalSince1970, forKey: SettingsKeys.lastSeen)
     }
     
     deinit {
@@ -180,11 +209,16 @@ class UnuScooterManager: NSObject, ObservableObject {
             .publisher(for: UIApplication.didBecomeActiveNotification)
             .sink { [weak self] _ in
                 guard let self = self else { return }
-                // Re-establish the connection on foreground if we lost it.
+                // Arm auto-unlock for this app-open if enabled.
+                if self.autoUnlockEnabled { self.pendingAutoUnlock = true }
+
                 guard self.hasCompletedOnboarding,
-                      !self.isConnected,
                       self.centralManager.state == .poweredOn else { return }
-                if let scooter = self.scooter {
+
+                if self.isConnected {
+                    // Already connected — evaluate auto-unlock right away.
+                    if self.pendingAutoUnlock { self.scooter?.readRSSI() }
+                } else if let scooter = self.scooter {
                     self.centralManager.connect(scooter, options: nil)
                 } else {
                     self.startScanning()
@@ -267,10 +301,15 @@ class UnuScooterManager: NSObject, ObservableObject {
                 // Check handlebar after 2s
                 try? await Task.sleep(nanoseconds: 2_000_000_000)
                 await verifyHandlebarState()
+
+                // Optionally pop the seat whenever we unlock (auto or manual).
+                if autoOpenSeatOnUnlock {
+                    openSeat()
+                }
             }
         }
     }
-    
+
     func lock() {
         Task {
             guard await ensureScooterAwakeIfPossible() else { return }
@@ -494,6 +533,7 @@ class UnuScooterManager: NSObject, ObservableObject {
         if let scooter = scooter {
             switch scooter.state {
             case .connected:
+                markSeen()
                 if !isConnected && !needsPairing {
                     // Only set connected if we don't need pairing
                     isConnected = true
@@ -818,7 +858,18 @@ extension UnuScooterManager: @preconcurrency CBPeripheralDelegate {
             print("🔕 Stopped updates on \(characteristic.uuid)")
         }
     }
-    
+
+    func peripheral(_ peripheral: CBPeripheral, didReadRSSI RSSI: NSNumber, error: Error?) {
+        // Only acts when an auto-unlock attempt is armed.
+        guard pendingAutoUnlock else { return }
+        pendingAutoUnlock = false
+        guard error == nil else { return }
+        print("📶 Auto-unlock RSSI \(RSSI) (min \(autoUnlockMinRSSI))")
+        if RSSI.intValue >= autoUnlockMinRSSI && isLocked {
+            unlock()
+        }
+    }
+
     func peripheral(_ peripheral: CBPeripheral,
                     didUpdateValueFor characteristic: CBCharacteristic,
                     error: Error?) {
@@ -834,10 +885,17 @@ extension UnuScooterManager: @preconcurrency CBPeripheralDelegate {
         // If we get here, we have successful communication with the scooter
         needsPairing = false
         isPairing = false
+        let justConnected = !isConnected
         isConnected = true
         connectionPhase = .connected
+        markSeen()
         print("🔓 Pairing successful, connection established")
-        
+
+        // On the connect transition, evaluate auto-unlock if it was armed.
+        if justConnected && pendingAutoUnlock {
+            peripheral.readRSSI()
+        }
+
         guard let data = characteristic.value else {
             print("⚠️ No data for characteristic \(characteristic.uuid)")
             return
