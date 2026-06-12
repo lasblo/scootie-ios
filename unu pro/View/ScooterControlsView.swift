@@ -101,6 +101,7 @@ struct ScooterControlsView: View {
                     .padding(.vertical, 4)
                     .background(RoundedRectangle(cornerRadius: 6).fill(DeckTheme.lime))
                     .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(DeckTheme.ink, lineWidth: 2))
+                    .offset(y: 3)   // optically center against the lowercase wordmark
             }
 
             Spacer()
