@@ -36,13 +36,11 @@ struct ScooterControlsView: View {
                 ScrollView {
                     VStack(spacing: 18) {
                         masthead
-                        displayPanel          // instrument cluster: scooter + battery
-                        Spacer(minLength: 16)
+                        displayPanel          // hero card grows to fill the height
                         HStack(spacing: 14) {
                             storageTile
                             hazardTile
                         }
-                        Spacer(minLength: 16)
                     }
                     .padding(.horizontal, 18)
                     .padding(.top, 6)
@@ -162,10 +160,9 @@ struct ScooterControlsView: View {
                 Image("scooter")
                     .resizable()
                     .scaledToFit()
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 172)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .padding(.horizontal, 14)
-                    .padding(.vertical, 6)
+                    .padding(.vertical, 10)
 
                 // Battery instrument along the base — tap the panel for details.
                 HStack(spacing: 12) {
