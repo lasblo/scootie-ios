@@ -86,21 +86,24 @@ struct DeckTileStyle: ButtonStyle {
 
     func makeBody(configuration: Configuration) -> some View {
         let pressed = configuration.isPressed
-        return ZStack {
-            RoundedRectangle(cornerRadius: radius, style: .continuous)
-                .fill(DeckTheme.ink)
-                .offset(x: DeckTheme.drop, y: DeckTheme.drop)
-
-            configuration.label
-                .background(RoundedRectangle(cornerRadius: radius, style: .continuous).fill(fill))
-                .overlay(
-                    RoundedRectangle(cornerRadius: radius, style: .continuous)
-                        .strokeBorder(DeckTheme.ink, lineWidth: DeckTheme.border)
-                )
-                .offset(x: pressed ? DeckTheme.drop : 0,
-                        y: pressed ? DeckTheme.drop : 0)
-        }
-        .animation(.easeOut(duration: 0.08), value: pressed)
+        // Use .background/.overlay (which size to the content) rather than a
+        // ZStack with a bare shape — a bare shape is greedy and would stretch
+        // the button to fill its container.
+        return configuration.label
+            .background(RoundedRectangle(cornerRadius: radius, style: .continuous).fill(fill))
+            .overlay(
+                RoundedRectangle(cornerRadius: radius, style: .continuous)
+                    .strokeBorder(DeckTheme.ink, lineWidth: DeckTheme.border)
+            )
+            .offset(x: pressed ? DeckTheme.drop : 0,
+                    y: pressed ? DeckTheme.drop : 0)
+            // Static hard shadow behind, sized to the content (does not move on press).
+            .background(
+                RoundedRectangle(cornerRadius: radius, style: .continuous)
+                    .fill(DeckTheme.ink)
+                    .offset(x: DeckTheme.drop, y: DeckTheme.drop)
+            )
+            .animation(.easeOut(duration: 0.08), value: pressed)
     }
 }
 
