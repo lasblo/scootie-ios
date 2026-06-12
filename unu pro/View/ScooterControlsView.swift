@@ -30,33 +30,38 @@ struct ScooterControlsView: View {
         ZStack {
             DeckTheme.paper.ignoresSafeArea()
 
-            ScrollView {
-                VStack(spacing: 18) {
-                    masthead
-                    displayPanel
-                    HStack(spacing: 14) {
-                        hazardTile
-                        storageTile
+            // Fill at least the viewport so the Spacer pushes the controls down
+            // into the thumb zone; still scrolls on very small screens.
+            GeometryReader { geo in
+                ScrollView {
+                    VStack(spacing: 18) {
+                        masthead
+                        displayPanel          // instrument cluster: scooter + battery
+                        Spacer(minLength: 16)
+                        HStack(spacing: 14) {
+                            storageTile
+                            hazardTile
+                        }
                     }
-                    batteryBar
-                }
-                .padding(.horizontal, 18)
-                .padding(.top, 6)
-                .padding(.bottom, 12)
-            }
-            .scrollBounceBehavior(.basedOnSize)
-            .scrollIndicators(.hidden)
-            // Lock control pinned to the bottom — the primary action, kept in
-            // easy thumb reach on large phones.
-            .safeAreaInset(edge: .bottom) {
-                lockSlider
                     .padding(.horizontal, 18)
-                    .padding(.top, 10)
-                    .padding(.bottom, 10)
-                    .background(DeckTheme.paper)
+                    .padding(.top, 6)
+                    .padding(.bottom, 12)
+                    .frame(minHeight: geo.size.height)
+                }
+                .scrollBounceBehavior(.basedOnSize)
+                .scrollIndicators(.hidden)
             }
         }
         .tint(DeckTheme.ink)
+        // Lock control pinned to the bottom — the primary action, kept in
+        // easy thumb reach on large phones.
+        .safeAreaInset(edge: .bottom) {
+            lockSlider
+                .padding(.horizontal, 18)
+                .padding(.top, 10)
+                .padding(.bottom, 10)
+                .background(DeckTheme.paper)
+        }
         .sheet(isPresented: $showDebugMenu) {
             DebugMenuView(scooterManager: scooterManager)
         }
@@ -126,38 +131,61 @@ struct ScooterControlsView: View {
     // MARK: - Scooter display panel
 
     private var displayPanel: some View {
-        VStack(spacing: 0) {
-            HStack {
-                Text("YOUR RIDE")
-                    .deckLabel(12)
-                    .foregroundStyle(DeckTheme.ink)
-
-                Spacer()
-
-                HStack(spacing: 5) {
-                    Image(systemName: scooterManager.cbbIsCharging ? "bolt.fill" : "battery.100")
-                        .font(.system(size: 11, weight: .black))
-                    Text(scooterManager.isConnected ? "\(scooterManager.primaryBatteryPercent)%" : "--")
+        Button {
+            showBatteryDetails = true
+        } label: {
+            VStack(spacing: 0) {
+                HStack {
+                    Text("YOUR RIDE")
                         .deckLabel(12)
-                }
-                .foregroundStyle(DeckTheme.onLime)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-                .background(RoundedRectangle(cornerRadius: 6).fill(DeckTheme.lime))
-                .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(DeckTheme.ink, lineWidth: 2))
-            }
-            .padding(.horizontal, 16)
-            .padding(.top, 14)
+                        .foregroundStyle(DeckTheme.ink)
 
-            Image("scooter")
-                .resizable()
-                .scaledToFit()
-                .frame(maxWidth: .infinity)
-                .frame(height: 188)
-                .padding(.horizontal, 14)
-                .padding(.bottom, 10)
+                    Spacer()
+
+                    HStack(spacing: 5) {
+                        Image(systemName: scooterManager.cbbIsCharging ? "bolt.fill" : "battery.100")
+                            .font(.system(size: 11, weight: .black))
+                        Text(scooterManager.isConnected ? "\(scooterManager.primaryBatteryPercent)%" : "--")
+                            .deckLabel(12)
+                    }
+                    .foregroundStyle(DeckTheme.onLime)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(RoundedRectangle(cornerRadius: 6).fill(DeckTheme.lime))
+                    .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(DeckTheme.ink, lineWidth: 2))
+                }
+                .padding(.horizontal, 16)
+                .padding(.top, 14)
+
+                Image("scooter")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 172)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 6)
+
+                // Battery instrument along the base — tap the panel for details.
+                HStack(spacing: 12) {
+                    Image(systemName: "bolt.fill")
+                        .font(.system(size: 14, weight: .black))
+                        .foregroundStyle(DeckTheme.ink)
+                    Text("BATTERY")
+                        .deckLabel(12)
+                        .foregroundStyle(DeckTheme.ink)
+
+                    gauge(scooterManager.isConnected ? scooterManager.primaryBatteryPercent : 0)
+
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 13, weight: .black))
+                        .foregroundStyle(DeckTheme.ink)
+                }
+                .padding(.horizontal, 16)
+                .padding(.top, 4)
+                .padding(.bottom, 14)
+            }
         }
-        .deckPanel(fill: DeckTheme.panel)
+        .buttonStyle(DeckTileStyle(fill: DeckTheme.panel))
     }
 
     // MARK: - Slide to lock / unlock
@@ -265,52 +293,21 @@ struct ScooterControlsView: View {
         .buttonStyle(DeckTileStyle(fill: DeckTheme.panel))
     }
 
-    // MARK: - Battery bar
-
-    private var batteryBar: some View {
-        Button {
-            showBatteryDetails = true
-        } label: {
-            HStack(spacing: 14) {
-                Image(systemName: "bolt.fill")
-                    .font(.system(size: 18, weight: .black))
-                    .foregroundStyle(DeckTheme.ink)
-
-                Text("BATTERY")
-                    .deckLabel(14)
-                    .foregroundStyle(DeckTheme.ink)
-
-                Spacer()
-
-                gauge(scooterManager.isConnected ? scooterManager.primaryBatteryPercent : 0)
-
-                Text(scooterManager.isConnected ? "\(scooterManager.primaryBatteryPercent)%" : "--")
-                    .deckLabel(15)
-                    .foregroundStyle(DeckTheme.ink)
-                    .frame(width: 48, alignment: .trailing)
-
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 14, weight: .black))
-                    .foregroundStyle(DeckTheme.ink)
-            }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 18)
-        }
-        .buttonStyle(DeckTileStyle(fill: DeckTheme.panel))
-    }
+    // MARK: - Battery gauge
 
     private func gauge(_ pct: Int) -> some View {
         let clamped = CGFloat(max(0, min(100, pct))) / 100
+        let fill = pct <= 15 ? DeckTheme.signal : DeckTheme.lime
         return GeometryReader { g in
             ZStack(alignment: .leading) {
                 RoundedRectangle(cornerRadius: 5).fill(DeckTheme.paper)
                 RoundedRectangle(cornerRadius: 5)
-                    .fill(DeckTheme.lime)
+                    .fill(fill)
                     .frame(width: g.size.width * clamped)
             }
             .overlay(RoundedRectangle(cornerRadius: 5).strokeBorder(DeckTheme.ink, lineWidth: 2))
         }
-        .frame(width: 64, height: 22)
+        .frame(height: 22)
     }
 }
 
