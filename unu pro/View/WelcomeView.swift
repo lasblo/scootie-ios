@@ -6,148 +6,157 @@ struct WelcomeScreen: View {
     @Binding var hasCompletedOnboarding: Bool
 
     @State private var appeared = false
-    @State private var float = false
     @State private var showConnect = false
 
     private var bluetoothReady: Bool { scooterManager.bluetoothState == .poweredOn }
 
     var body: some View {
         ZStack {
-            OnboardingBackground()
+            DeckTheme.paper.ignoresSafeArea()
 
-            VStack(spacing: 0) {
-                Spacer(minLength: 12)
-
-                hero
-                    .opacity(appeared ? 1 : 0)
-                    .offset(y: appeared ? 0 : 24)
-                    .animation(.spring(response: 0.7, dampingFraction: 0.8).delay(0.05),
-                               value: appeared)
-
-                titleBlock
-                    .padding(.top, 28)
-                    .opacity(appeared ? 1 : 0)
-                    .offset(y: appeared ? 0 : 24)
-                    .animation(.spring(response: 0.7, dampingFraction: 0.8).delay(0.15),
-                               value: appeared)
-
-                features
-                    .padding(.top, 36)
-                    .padding(.horizontal, 28)
-                    .opacity(appeared ? 1 : 0)
-                    .offset(y: appeared ? 0 : 24)
-                    .animation(.spring(response: 0.7, dampingFraction: 0.8).delay(0.25),
-                               value: appeared)
-
-                Spacer(minLength: 24)
-
-                actions
-                    .padding(.horizontal, 24)
-                    .padding(.bottom, 8)
-                    .opacity(appeared ? 1 : 0)
-                    .offset(y: appeared ? 0 : 24)
-                    .animation(.spring(response: 0.7, dampingFraction: 0.8).delay(0.35),
-                               value: appeared)
+            GeometryReader { geo in
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 22) {
+                        masthead
+                        headline
+                        scooterPanel
+                        features
+                        Spacer(minLength: 8)
+                    }
+                    .padding(.horizontal, 18)
+                    .padding(.top, 6)
+                    .padding(.bottom, 12)
+                    .frame(minHeight: geo.size.height, alignment: .top)
+                }
+                .scrollBounceBehavior(.basedOnSize)
+                .scrollIndicators(.hidden)
             }
-            .padding(.bottom, 24)
+            .opacity(appeared ? 1 : 0)
+            .offset(y: appeared ? 0 : 16)
         }
-        .preferredColorScheme(.dark)
+        .tint(DeckTheme.ink)
+        .safeAreaInset(edge: .bottom) {
+            actions
+                .padding(.horizontal, 18)
+                .padding(.top, 10)
+                .padding(.bottom, 10)
+                .background(DeckTheme.paper)
+        }
         .sheet(isPresented: $showConnect) {
             ScooterConnectionView(hasCompletedOnboarding: $hasCompletedOnboarding)
         }
         .onAppear {
-            appeared = true
-            withAnimation(.easeInOut(duration: 3.2).repeatForever(autoreverses: true)) {
-                float = true
+            withAnimation(.spring(response: 0.6, dampingFraction: 0.85)) {
+                appeared = true
             }
         }
     }
 
-    // MARK: - Hero
+    // MARK: - Masthead
 
-    private var hero: some View {
-        ZStack {
-            Circle()
-                .fill(OnboardingTheme.accentGradient)
-                .frame(width: 240, height: 240)
-                .blur(radius: 70)
-                .opacity(0.45)
+    private var masthead: some View {
+        HStack(spacing: 7) {
+            Text("unu")
+                .font(.system(size: 36, weight: .black, design: .rounded))
+                .foregroundStyle(DeckTheme.ink)
+            Text("PRO")
+                .deckLabel(14)
+                .foregroundStyle(DeckTheme.onLime)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(RoundedRectangle(cornerRadius: 6).fill(DeckTheme.lime))
+                .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(DeckTheme.ink, lineWidth: 2))
+            Spacer()
+        }
+    }
+
+    // MARK: - Headline
+
+    private var headline: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("LET'S GET\nROLLING.")
+                .font(.system(size: 40, weight: .black, design: .rounded))
+                .foregroundStyle(DeckTheme.ink)
+                .lineSpacing(2)
+
+            Text("Connect your unu pro and control it straight from your phone.")
+                .font(.system(size: 16, weight: .medium))
+                .foregroundStyle(DeckTheme.ink.opacity(0.6))
+        }
+    }
+
+    // MARK: - Scooter panel
+
+    private var scooterPanel: some View {
+        VStack(spacing: 0) {
+            HStack {
+                Text("YOUR RIDE")
+                    .deckLabel(12)
+                    .foregroundStyle(DeckTheme.ink)
+                Spacer()
+                Text("ELECTRIC")
+                    .deckLabel(11)
+                    .foregroundStyle(DeckTheme.onLime)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(RoundedRectangle(cornerRadius: 6).fill(DeckTheme.lime))
+                    .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(DeckTheme.ink, lineWidth: 2))
+            }
+            .padding(.horizontal, 16)
+            .padding(.top, 14)
 
             Image("scooter")
                 .resizable()
                 .scaledToFit()
-                .frame(height: 180)
-                .shadow(color: OnboardingTheme.accent.opacity(0.5), radius: 28, y: 10)
-                .offset(y: float ? -10 : 10)
+                .frame(maxWidth: .infinity)
+                .frame(height: 150)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 8)
         }
+        .deckPanel(fill: DeckTheme.panel)
     }
 
-    // MARK: - Title
-
-    private var titleBlock: some View {
-        VStack(spacing: 12) {
-            Text("Welcome to")
-                .font(.system(size: 19, weight: .semibold, design: .rounded))
-                .foregroundStyle(.white.opacity(0.7))
-
-            Text("unu pro")
-                .font(.system(size: 46, weight: .bold, design: .rounded))
-                .foregroundStyle(OnboardingTheme.accentGradient)
-
-            Text("Connect your scooter and control it\nwith just your phone.")
-                .font(.body)
-                .multilineTextAlignment(.center)
-                .foregroundStyle(.white.opacity(0.7))
-                .padding(.top, 4)
-                .padding(.horizontal, 32)
-        }
-    }
-
-    // MARK: - Feature highlights
+    // MARK: - Features
 
     private var features: some View {
-        VStack(spacing: 18) {
+        VStack(spacing: 16) {
             FeatureRow(icon: "lock.open.fill",
-                       title: "Lock & unlock",
-                       subtitle: "Secure your scooter with a single tap.")
+                       title: "LOCK & UNLOCK",
+                       subtitle: "Secure your scooter with one slide.")
             FeatureRow(icon: "bolt.fill",
-                       title: "Battery & range",
-                       subtitle: "Check every charge level at a glance.")
+                       title: "BATTERY & RANGE",
+                       subtitle: "Every charge level at a glance.")
             FeatureRow(icon: "lightbulb.fill",
-                       title: "Lights & seat",
-                       subtitle: "Blinkers, hazards and the seatbox.")
+                       title: "LIGHTS & STORAGE",
+                       subtitle: "Hazards and the seatbox, remote.")
         }
+        .padding(.top, 2)
     }
 
-    // MARK: - Actions
+    // MARK: - Actions (pinned)
 
     @ViewBuilder
     private var actions: some View {
-        VStack(spacing: 14) {
-            if scooterManager.bluetoothState == .unauthorized {
-                Button(action: openSettings) {
-                    Label("Open Settings", systemImage: "gearshape.fill")
-                }
-                .buttonStyle(PrimaryButtonStyle())
-
-                Text("Bluetooth access is required to connect to your scooter. Enable it in Settings.")
-                    .font(.footnote)
-                    .foregroundStyle(.white.opacity(0.65))
+        if scooterManager.bluetoothState == .unauthorized {
+            VStack(spacing: 8) {
+                Text("Bluetooth access is required. Enable it in Settings.")
+                    .font(.footnote.weight(.medium))
+                    .foregroundStyle(DeckTheme.ink.opacity(0.6))
                     .multilineTextAlignment(.center)
-            } else {
-                Button {
-                    showConnect = true
-                } label: {
-                    Label("Connect your scooter", systemImage: "bolt.horizontal.circle.fill")
-                }
-                .buttonStyle(PrimaryButtonStyle(enabled: bluetoothReady))
-                .disabled(!bluetoothReady)
-
+                DeckButton(title: "OPEN SETTINGS", systemImage: "gearshape.fill", action: openSettings)
+            }
+        } else {
+            VStack(spacing: 8) {
                 if !bluetoothReady {
-                    Label(scooterManager.statusMessage, systemImage: "antenna.radiowaves.left.and.right.slash")
-                        .font(.footnote)
-                        .foregroundStyle(.white.opacity(0.65))
+                    Text(scooterManager.statusMessage)
+                        .font(.footnote.weight(.medium))
+                        .foregroundStyle(DeckTheme.ink.opacity(0.6))
                         .multilineTextAlignment(.center)
+                }
+                DeckButton(title: "CONNECT SCOOTER",
+                           systemImage: "bolt.horizontal.circle.fill",
+                           enabled: bluetoothReady) {
+                    showConnect = true
                 }
             }
         }
@@ -168,24 +177,21 @@ private struct FeatureRow: View {
     let subtitle: String
 
     var body: some View {
-        HStack(spacing: 16) {
+        HStack(spacing: 14) {
             Image(systemName: icon)
-                .font(.system(size: 19, weight: .semibold))
-                .foregroundStyle(OnboardingTheme.accent)
+                .font(.system(size: 19, weight: .black))
+                .foregroundStyle(DeckTheme.onLime)
                 .frame(width: 46, height: 46)
-                .background(
-                    Circle()
-                        .fill(Color.white.opacity(0.07))
-                        .overlay(Circle().stroke(Color.white.opacity(0.08), lineWidth: 1))
-                )
+                .background(RoundedRectangle(cornerRadius: 10).fill(DeckTheme.lime))
+                .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(DeckTheme.ink, lineWidth: 2))
 
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: 3) {
                 Text(title)
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(.white)
+                    .deckLabel(13)
+                    .foregroundStyle(DeckTheme.ink)
                 Text(subtitle)
-                    .font(.footnote)
-                    .foregroundStyle(.white.opacity(0.6))
+                    .font(.footnote.weight(.medium))
+                    .foregroundStyle(DeckTheme.ink.opacity(0.6))
             }
 
             Spacer(minLength: 0)

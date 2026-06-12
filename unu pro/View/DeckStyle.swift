@@ -107,6 +107,35 @@ struct DeckTileStyle: ButtonStyle {
     }
 }
 
+// MARK: - Full-width deck button
+
+struct DeckButton: View {
+    let title: String
+    var systemImage: String? = nil
+    var fill: Color = DeckTheme.lime
+    var textColor: Color = DeckTheme.onLime
+    var enabled: Bool = true
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 10) {
+                if let systemImage {
+                    Image(systemName: systemImage)
+                        .font(.system(size: 16, weight: .black))
+                }
+                Text(title).deckLabel(15)
+            }
+            .foregroundStyle(textColor)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 17)
+            .opacity(enabled ? 1 : 0.45)
+        }
+        .buttonStyle(DeckTileStyle(fill: fill))
+        .disabled(!enabled)
+    }
+}
+
 // MARK: - Monospaced "instrument" label
 
 extension Text {
