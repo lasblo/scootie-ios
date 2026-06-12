@@ -180,11 +180,13 @@ class UnuScooterManager: NSObject, ObservableObject {
             .publisher(for: UIApplication.didBecomeActiveNotification)
             .sink { [weak self] _ in
                 guard let self = self else { return }
-                // Only auto-reconnect if we've completed onboarding and were previously connected
-                if self.hasCompletedOnboarding &&
-                   !self.isConnected &&
-                   self.centralManager.state == .poweredOn &&
-                   self.scooter != nil {
+                // Re-establish the connection on foreground if we lost it.
+                guard self.hasCompletedOnboarding,
+                      !self.isConnected,
+                      self.centralManager.state == .poweredOn else { return }
+                if let scooter = self.scooter {
+                    self.centralManager.connect(scooter, options: nil)
+                } else {
                     self.startScanning()
                 }
             }
@@ -589,11 +591,18 @@ extension UnuScooterManager: @preconcurrency CBCentralManagerDelegate {
             statusMessage = "Bluetooth state unknown"
             print("❌ Bluetooth state unknown")
         case .poweredOn:
-            // Only show "Ready" if we're not already doing something
-            if !isConnected && !isScanning && !pendingStartScan {
+            print("ℹ️ Bluetooth is on")
+            // Bluetooth (re)gained — reconnect if we were connected before.
+            if hasCompletedOnboarding && !isConnected {
+                if let scooter = scooter {
+                    statusMessage = "Reconnecting…"
+                    centralManager.connect(scooter, options: nil)
+                } else if !isScanning && !pendingStartScan {
+                    startScanning()
+                }
+            } else if !isConnected && !isScanning && !pendingStartScan {
                 statusMessage = "Ready"
             }
-            print("ℹ️ Bluetooth is on")
         @unknown default:
             statusMessage = "Unknown Bluetooth state"
             print("❌ Unknown Bluetooth state")
@@ -637,7 +646,9 @@ extension UnuScooterManager: @preconcurrency CBCentralManagerDelegate {
         print("🔌 Initial connection to scooter established")
         peripheral.delegate = self
         statusMessage = "Verifying connection..."
-        
+        // Backstop: keep verifying/repairing the connection while we're connected.
+        startStateUpdateTimer()
+
         // Discover relevant services
         peripheral.discoverServices([
             commandServiceUUID,
@@ -682,8 +693,17 @@ extension UnuScooterManager: @preconcurrency CBCentralManagerDelegate {
         }
 
         isConnected = false
-        statusMessage = (error == nil) ? "Disconnected" : "Connection lost"
-        self.scooter = nil
+        clearCharacteristics()
+
+        // Keep the peripheral reference and let CoreBluetooth reconnect
+        // automatically as soon as the scooter is back in range — connect()
+        // has no timeout, so no app restart is needed.
+        if centralManager.state == .poweredOn {
+            statusMessage = "Reconnecting…"
+            centralManager.connect(peripheral, options: nil)
+        } else {
+            statusMessage = "Connection lost"
+        }
     }
 }
 

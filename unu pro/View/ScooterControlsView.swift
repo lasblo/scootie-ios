@@ -194,6 +194,7 @@ struct ScooterControlsView: View {
         let knob: CGFloat = 58
         let pad: CGFloat = 6
         let unlocked = !scooterManager.isLocked
+        let connected = scooterManager.isConnected
 
         return GeometryReader { geo in
             let maxX = max(0, geo.size.width - knob - pad * 2)
@@ -206,15 +207,15 @@ struct ScooterControlsView: View {
 
                 // track
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .fill(unlocked ? DeckTheme.lime : DeckTheme.panel)
+                    .fill((connected && unlocked) ? DeckTheme.lime : DeckTheme.panel)
                     .overlay(
                         RoundedRectangle(cornerRadius: 16, style: .continuous)
                             .strokeBorder(DeckTheme.ink, lineWidth: DeckTheme.border)
                     )
 
-                Text(unlocked ? "SLIDE TO LOCK" : "SLIDE TO UNLOCK")
+                Text(connected ? (unlocked ? "SLIDE TO LOCK" : "SLIDE TO UNLOCK") : "SCOOTER OFFLINE")
                     .deckLabel(15)
-                    .foregroundStyle(unlocked ? DeckTheme.onLime : DeckTheme.ink)
+                    .foregroundStyle((connected && unlocked) ? DeckTheme.onLime : DeckTheme.ink)
                     .offset(x: knob / 2)
 
                 // knob
@@ -251,6 +252,8 @@ struct ScooterControlsView: View {
             }
         }
         .frame(height: 70)
+        .opacity(connected ? 1 : 0.5)
+        .allowsHitTesting(connected)
     }
 
     // MARK: - Action tiles
@@ -273,6 +276,8 @@ struct ScooterControlsView: View {
             .padding(.vertical, 20)
         }
         .buttonStyle(DeckTileStyle(fill: on ? DeckTheme.signal : DeckTheme.panel))
+        .disabled(!scooterManager.isConnected)
+        .opacity(scooterManager.isConnected ? 1 : 0.4)
     }
 
     private var storageTile: some View {
@@ -291,6 +296,8 @@ struct ScooterControlsView: View {
             .padding(.vertical, 20)
         }
         .buttonStyle(DeckTileStyle(fill: DeckTheme.panel))
+        .disabled(!scooterManager.isConnected)
+        .opacity(scooterManager.isConnected ? 1 : 0.4)
     }
 
     // MARK: - Battery gauge
