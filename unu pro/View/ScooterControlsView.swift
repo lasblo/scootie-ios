@@ -34,7 +34,6 @@ struct ScooterControlsView: View {
                 VStack(spacing: 18) {
                     masthead
                     displayPanel
-                    lockSlider
                     HStack(spacing: 14) {
                         hazardTile
                         storageTile
@@ -43,10 +42,19 @@ struct ScooterControlsView: View {
                 }
                 .padding(.horizontal, 18)
                 .padding(.top, 6)
-                .padding(.bottom, 28)
+                .padding(.bottom, 12)
             }
             .scrollBounceBehavior(.basedOnSize)
             .scrollIndicators(.hidden)
+            // Lock control pinned to the bottom — the primary action, kept in
+            // easy thumb reach on large phones.
+            .safeAreaInset(edge: .bottom) {
+                lockSlider
+                    .padding(.horizontal, 18)
+                    .padding(.top, 10)
+                    .padding(.bottom, 10)
+                    .background(DeckTheme.paper)
+            }
         }
         .tint(DeckTheme.ink)
         .sheet(isPresented: $showDebugMenu) {
@@ -60,7 +68,7 @@ struct ScooterControlsView: View {
                 auxPercent: scooterManager.auxBatteryPercent,
                 isCharging: scooterManager.cbbIsCharging
             )
-            .presentationDetents([.medium])
+            .presentationDetents([.medium, .large])
         }
         .alert(scooterManager.lockAlertMessage, isPresented: $scooterManager.showLockAlert) {
             Button("Ignore", role: .destructive) {}
