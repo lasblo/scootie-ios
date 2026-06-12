@@ -1,6 +1,6 @@
 //
 //  Item.swift
-//  unu pro
+//  Scootie
 //
 //  Created by Lasse on 23.01.25.
 //

@@ -1,6 +1,6 @@
 //
 //  DeckStyle.swift
-//  unu pro
+//  Scootie
 //
 //  "Control deck" visual language: heavy ink outlines, hard offset shadows
 //  (no blur), monospaced technical labels and a single electric-lime accent.

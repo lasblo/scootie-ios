@@ -1,6 +1,6 @@
 //
 //  DebugMenuView.swift
-//  unu pro
+//  Scootie
 //
 //  Created by Lasse Blomenkemper on 20.05.25.
 //

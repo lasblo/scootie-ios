@@ -1,6 +1,6 @@
 //
 //  SettingsView.swift
-//  unu pro
+//  Scootie
 //
 //  Deck-styled settings: auto-unlock (with a minimum signal threshold) and
 //  auto-open-seat on unlock.

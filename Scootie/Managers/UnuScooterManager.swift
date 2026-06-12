@@ -1,6 +1,6 @@
 //
 //  UnuScooterManager.swift
-//  unu pro
+//  Scootie
 //
 //  Created by Lasse on 24.01.25.
 //

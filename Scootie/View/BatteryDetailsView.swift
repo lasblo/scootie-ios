@@ -1,6 +1,6 @@
 //
 //  BatteryDetailsView.swift
-//  unu pro
+//  Scootie
 //
 //  Created by Lasse Blomenkemper on 24.01.25.
 //

@@ -1,6 +1,6 @@
 //
-//  UNUPro.swift
-//  unu pro
+//  ScootieApp.swift
+//  Scootie
 //
 //  Created by Lasse on 23.01.25.
 //
@@ -9,7 +9,7 @@ import SwiftUI
 import SwiftData
 
 @main
-struct UNUPro: App {
+struct ScootieApp: App {
     @StateObject private var scooterManager = UnuScooterManager()
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
 

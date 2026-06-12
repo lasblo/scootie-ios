@@ -7,26 +7,26 @@
 	objects = {
 
 /* Begin PBXFileReference section */
-		0AE0190F2D429D7700026AEC /* unu pro.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "unu pro.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		0AE0190F2D429D7700026AEC /* Scootie.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Scootie.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		0AE019242D429FB200026AEC /* Exceptions for "unu pro" folder in "unu pro" target */ = {
+		0AE019242D429FB200026AEC /* Exceptions for "Scootie" folder in "Scootie" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
 			);
-			target = 0AE0190E2D429D7700026AEC /* unu pro */;
+			target = 0AE0190E2D429D7700026AEC /* Scootie */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		0AE019112D429D7700026AEC /* unu pro */ = {
+		0AE019112D429D7700026AEC /* Scootie */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				0AE019242D429FB200026AEC /* Exceptions for "unu pro" folder in "unu pro" target */,
+				0AE019242D429FB200026AEC /* Exceptions for "Scootie" folder in "Scootie" target */,
 			);
-			path = "unu pro";
+			path = "Scootie";
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -45,7 +45,7 @@
 		0AE019062D429D7700026AEC = {
 			isa = PBXGroup;
 			children = (
-				0AE019112D429D7700026AEC /* unu pro */,
+				0AE019112D429D7700026AEC /* Scootie */,
 				0AE019102D429D7700026AEC /* Products */,
 			);
 			sourceTree = "<group>";
@@ -53,7 +53,7 @@
 		0AE019102D429D7700026AEC /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				0AE0190F2D429D7700026AEC /* unu pro.app */,
+				0AE0190F2D429D7700026AEC /* Scootie.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -61,9 +61,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		0AE0190E2D429D7700026AEC /* unu pro */ = {
+		0AE0190E2D429D7700026AEC /* Scootie */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 0AE019202D429D7800026AEC /* Build configuration list for PBXNativeTarget "unu pro" */;
+			buildConfigurationList = 0AE019202D429D7800026AEC /* Build configuration list for PBXNativeTarget "Scootie" */;
 			buildPhases = (
 				0AE0190B2D429D7700026AEC /* Sources */,
 				0AE0190C2D429D7700026AEC /* Frameworks */,
@@ -74,13 +74,13 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				0AE019112D429D7700026AEC /* unu pro */,
+				0AE019112D429D7700026AEC /* Scootie */,
 			);
-			name = "unu pro";
+			name = "Scootie";
 			packageProductDependencies = (
 			);
-			productName = UNU;
-			productReference = 0AE0190F2D429D7700026AEC /* unu pro.app */;
+			productName = Scootie;
+			productReference = 0AE0190F2D429D7700026AEC /* Scootie.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -98,7 +98,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 0AE0190A2D429D7700026AEC /* Build configuration list for PBXProject "unu pro" */;
+			buildConfigurationList = 0AE0190A2D429D7700026AEC /* Build configuration list for PBXProject "Scootie" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -112,7 +112,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				0AE0190E2D429D7700026AEC /* unu pro */,
+				0AE0190E2D429D7700026AEC /* Scootie */,
 			);
 		};
 /* End PBXProject section */
@@ -257,17 +257,17 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = "unu pro/unu pro.entitlements";
+				CODE_SIGN_ENTITLEMENTS = "Scootie/Scootie.entitlements";
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "\"unu pro/Preview Content\"";
+				DEVELOPMENT_ASSET_PATHS = "\"Scootie/Preview Content\"";
 				DEVELOPMENT_TEAM = GDBX745Z3V;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "unu pro/Info.plist";
-				INFOPLIST_KEY_CFBundleDisplayName = "unu pro";
+				INFOPLIST_FILE = "Scootie/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "Scootie";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "We need Bluetooth access to connect to your UNU scooter";
 				INFOPLIST_KEY_NSBluetoothPeripheralUsageDescription = "We need Bluetooth access to connect to your UNU scooter";
@@ -286,7 +286,7 @@
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = io.blomenkemper.unupro;
+				PRODUCT_BUNDLE_IDENTIFIER = io.blomenkemper.scootie;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = auto;
@@ -304,17 +304,17 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = "unu pro/unu pro.entitlements";
+				CODE_SIGN_ENTITLEMENTS = "Scootie/Scootie.entitlements";
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "\"unu pro/Preview Content\"";
+				DEVELOPMENT_ASSET_PATHS = "\"Scootie/Preview Content\"";
 				DEVELOPMENT_TEAM = GDBX745Z3V;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "unu pro/Info.plist";
-				INFOPLIST_KEY_CFBundleDisplayName = "unu pro";
+				INFOPLIST_FILE = "Scootie/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "Scootie";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "We need Bluetooth access to connect to your UNU scooter";
 				INFOPLIST_KEY_NSBluetoothPeripheralUsageDescription = "We need Bluetooth access to connect to your UNU scooter";
@@ -333,7 +333,7 @@
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = io.blomenkemper.unupro;
+				PRODUCT_BUNDLE_IDENTIFIER = io.blomenkemper.scootie;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = auto;
@@ -349,7 +349,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		0AE0190A2D429D7700026AEC /* Build configuration list for PBXProject "unu pro" */ = {
+		0AE0190A2D429D7700026AEC /* Build configuration list for PBXProject "Scootie" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				0AE0191E2D429D7800026AEC /* Debug */,
@@ -358,7 +358,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		0AE019202D429D7800026AEC /* Build configuration list for PBXNativeTarget "unu pro" */ = {
+		0AE019202D429D7800026AEC /* Build configuration list for PBXNativeTarget "Scootie" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				0AE019212D429D7800026AEC /* Debug */,
