@@ -7,9 +7,9 @@ Its whole point is speed: it connects to the scooter in about a second — versu
 > Unofficial. Not affiliated with or endorsed by emco electroroller GmbH. Use at your own risk.
 
 <p align="middle">
-   <img src="home.jpeg" width="32%" />
-   <img src="battery.jpeg" width="32%" />
-   <img src="lockfail.jpeg" width="32%" />
+   <img src="assets/control.jpeg" width="32%" />
+   <img src="assets/battery.jpeg" width="32%" />
+   <img src="assets/settings.jpeg" width="32%" />
 </p>
 
 ## Features
@@ -26,10 +26,6 @@ Its whole point is speed: it connects to the scooter in about a second — versu
 
 - iOS 18.2+ / Xcode 16.2+
 - A unu pro scooter (CoreBluetooth doesn't work in the Simulator — run on a device)
-
-## Build
-
-Open `Scootie.xcodeproj`, then build and run on a real device. Grant Bluetooth access on first launch and connect to your scooter.
 
 ## Credits
 
