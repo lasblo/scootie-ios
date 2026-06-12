@@ -123,10 +123,10 @@ struct WelcomeScreen: View {
         VStack(spacing: 16) {
             FeatureRow(icon: "lock.open.fill",
                        title: "LOCK & UNLOCK",
-                       subtitle: "Secure your scooter with one slide.")
+                       subtitle: "WAY faster than the stock app.")
             FeatureRow(icon: "bolt.fill",
                        title: "BATTERY & RANGE",
-                       subtitle: "Every charge level at a glance.")
+                       subtitle: "Every available charge level at a glance.")
             FeatureRow(icon: "lightbulb.fill",
                        title: "LIGHTS & STORAGE",
                        subtitle: "Hazards and the seatbox, remote.")
