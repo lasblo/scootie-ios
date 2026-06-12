@@ -41,6 +41,7 @@ struct ScooterControlsView: View {
                             storageTile
                             hazardTile
                         }
+                        .padding(.top, 6)     // a touch more so it visually matches the tiles↔lock gap
                     }
                     .padding(.horizontal, 18)
                     .padding(.top, 6)
