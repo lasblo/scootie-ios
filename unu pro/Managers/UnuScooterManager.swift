@@ -515,11 +515,14 @@ class UnuScooterManager: NSObject, ObservableObject {
         isConnected = false
         clearCharacteristics()
         statusMessage = "Disconnected."
-        
+
         // Always reconnect automatically if Bluetooth is still on
         if centralManager.state == .poweredOn, let scooter = scooter {
             statusMessage = "Reconnecting..."
+            connectionPhase = .connecting
             centralManager.connect(scooter, options: nil)
+        } else {
+            connectionPhase = .failed("Disconnected")
         }
     }
     
@@ -596,6 +599,7 @@ extension UnuScooterManager: @preconcurrency CBCentralManagerDelegate {
             if hasCompletedOnboarding && !isConnected {
                 if let scooter = scooter {
                     statusMessage = "Reconnecting…"
+                    connectionPhase = .connecting
                     centralManager.connect(scooter, options: nil)
                 } else if !isScanning && !pendingStartScan {
                     startScanning()
@@ -635,8 +639,8 @@ extension UnuScooterManager: @preconcurrency CBCentralManagerDelegate {
                 guard let self = self, self.connectionPhase == .connecting else { return }
                 self.centralManager.cancelPeripheralConnection(scooter)
                 self.scooter = nil
-                self.statusMessage = "Couldn't connect. Try again."
-                self.connectionPhase = .failed("Couldn't connect. Try again.")
+                self.statusMessage = "Couldn't connect."
+                self.connectionPhase = .failed("Couldn't connect.")
             }
         }
     }
@@ -700,9 +704,11 @@ extension UnuScooterManager: @preconcurrency CBCentralManagerDelegate {
         // has no timeout, so no app restart is needed.
         if centralManager.state == .poweredOn {
             statusMessage = "Reconnecting…"
+            connectionPhase = .connecting
             centralManager.connect(peripheral, options: nil)
         } else {
             statusMessage = "Connection lost"
+            connectionPhase = .failed("Connection lost")
         }
     }
 }

@@ -106,6 +106,30 @@ struct ScooterControlsView: View {
             Spacer()
 
             statusChip
+
+            if canRetry {
+                retryButton
+            }
+        }
+    }
+
+    // Show a retry affordance in any disconnected state that isn't currently
+    // trying to (re)connect.
+    private var canRetry: Bool {
+        if case .failed = scooterManager.connectionPhase { return true }
+        return false
+    }
+
+    private var retryButton: some View {
+        Button {
+            scooterManager.startScanning()
+        } label: {
+            Image(systemName: "arrow.clockwise")
+                .font(.system(size: 15, weight: .black))
+                .foregroundStyle(DeckTheme.onLime)
+                .frame(width: 40, height: 40)
+                .background(RoundedRectangle(cornerRadius: 8).fill(DeckTheme.lime))
+                .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(DeckTheme.ink, lineWidth: 2))
         }
     }
 
