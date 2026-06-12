@@ -11,13 +11,13 @@ struct ScooterControlsView: View {
     @EnvironmentObject var scooterManager: UnuScooterManager
     @State private var showBatteryDetails = false
     @State private var showDebugMenu = false
-    
+
     // For the custom drag gesture on the lock slider
     @GestureState private var dragState = DragState.inactive
     enum DragState {
         case inactive
         case dragging(translation: CGFloat)
-        
+
         var translation: CGFloat {
             switch self {
             case .inactive:               return 0
@@ -25,171 +25,33 @@ struct ScooterControlsView: View {
             }
         }
     }
-    
+
     var body: some View {
-        VStack(spacing: 4) {
-            // Header
-            Text("unu scooter pro")
-                .font(.title.bold())
-                .foregroundStyle(.primary)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .onLongPressGesture {
-                    showDebugMenu = true
+        ZStack {
+            DeckTheme.paper.ignoresSafeArea()
+
+            ScrollView {
+                VStack(spacing: 18) {
+                    masthead
+                    displayPanel
+                    lockSlider
+                    HStack(spacing: 14) {
+                        hazardTile
+                        storageTile
+                    }
+                    batteryBar
                 }
-            
-            HStack {
-                Circle()
-                    .fill(scooterManager.isConnected ? Color.green : Color.red)
-                    .frame(width: 8, height: 8)
-                Text(scooterManager.statusMessage)
-                    .foregroundStyle(.secondary)
+                .padding(.horizontal, 18)
+                .padding(.top, 6)
+                .padding(.bottom, 28)
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
+            .scrollBounceBehavior(.basedOnSize)
+            .scrollIndicators(.hidden)
         }
-        .padding(.horizontal, 20)
-        
-        VStack(spacing: 8) {
-            // Scooter Visualization
-            Image("scooter")
-                .resizable()
-                .aspectRatio(contentMode: .fit)
-                .frame(height: 300)
-                .padding()
-                .padding(.top, 20)
-            
-            // Main Controls
-            VStack(spacing: 24) {
-                // Slide to Lock/Unlock
-                GeometryReader { geometry in
-                    ZStack {
-                        // Track
-                        Capsule()
-                            .fill(.ultraThinMaterial)
-                        
-                        // Slider
-                        HStack {
-                            ZStack {
-                                Circle()
-                                    .fill(.white)
-                                    .shadow(radius: 2)
-                                
-                                Image(systemName: scooterManager.isLocked
-                                      ? "lock.fill"
-                                      : "lock.open.fill")
-                                    .font(.title3)
-                                    .foregroundColor(.black)
-                            }
-                            .frame(width: 50, height: 50)
-                            .offset(x: dragState.translation)
-                            .gesture(
-                                DragGesture()
-                                    .updating($dragState) { value, state, _ in
-                                        // Limit how far the user can drag the circle
-                                        let maxTranslation = geometry.size.width - 80
-                                        let newTranslation = min(max(0, value.translation.width),
-                                                                 maxTranslation)
-                                        state = .dragging(translation: newTranslation)
-                                    }
-                                    .onEnded { value in
-                                        // If user drags more than half the width, trigger lock/unlock
-                                        let threshold = geometry.size.width * 0.5
-                                        if value.translation.width > threshold {
-                                            if scooterManager.isLocked {
-                                                scooterManager.unlock()
-                                            } else {
-                                                scooterManager.lock()
-                                            }
-                                        }
-                                    }
-                            )
-                            
-                            Spacer()
-                        }
-                        .padding(4)
-                        
-                        // Label
-                        Text(scooterManager.isLocked
-                             ? "Slide to Unlock"
-                             : "Slide to Lock")
-                            .font(.callout.weight(.medium))
-                            .foregroundStyle(.secondary)
-                    }
-                }
-                .frame(height: 60)
-                
-                // Quick Actions
-                HStack(spacing: 16) {
-                    // Hazard Button
-                    Button {
-                        if scooterManager.hazardLightsOn {
-                            scooterManager.sendBlinkerCommand(state: "off")
-                        } else {
-                            scooterManager.sendBlinkerCommand(state: "both")
-                        }
-                        scooterManager.hazardLightsOn.toggle()
-                    } label: {
-                        VStack(spacing: 8) {
-                            BlinkingImage(systemName: "exclamationmark.triangle.fill",
-                                          isBlinking: scooterManager.hazardLightsOn)
-                                .padding(.bottom, 2)
-                            Text(scooterManager.hazardLightsOn
-                                 ? "Disable Hazards"
-                                 : "Enable Hazards")
-                                .font(.callout)
-                                .foregroundStyle(.white)
-                        }
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 16)
-                        .background(.ultraThinMaterial)
-                        .clipShape(RoundedRectangle(cornerRadius: 16))
-                    }
-                    
-                    // Seat Button
-                    Button(action: {
-                        scooterManager.openSeat()
-                    }) {
-                        VStack(spacing: 8) {
-                            Image(systemName: "suitcase.fill")
-                                .font(.title2)
-                                .foregroundStyle(.white)
-                                .padding(.bottom, 2)
-                            Text("Open Storage")
-                                .font(.callout)
-                                .foregroundStyle(.white)
-                        }
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 16)
-                        .background(.ultraThinMaterial)
-                        .clipShape(RoundedRectangle(cornerRadius: 16))
-                    }
-                }
-                
-                // Battery Details
-                Button {
-                    showBatteryDetails = true
-                } label: {
-                    HStack {
-                        Image(systemName: "battery.100.bolt")
-                            .foregroundStyle(.white)
-                        Text("Battery Details")
-                            .foregroundStyle(.white)
-                        Spacer()
-                        Image(systemName: "chevron.right")
-                            .font(.footnote.bold())
-                            .foregroundStyle(.gray)
-                    }
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 16)
-                    .background(.ultraThinMaterial)
-                    .clipShape(RoundedRectangle(cornerRadius: 16))
-                }
-            }
-            .padding(20)
-        }
+        .tint(DeckTheme.ink)
         .sheet(isPresented: $showDebugMenu) {
             DebugMenuView(scooterManager: scooterManager)
         }
-        // Battery details sheet
         .sheet(isPresented: $showBatteryDetails) {
             BatteryDetailsView(
                 primaryPercent: scooterManager.primaryBatteryPercent,
@@ -200,18 +62,247 @@ struct ScooterControlsView: View {
             )
             .presentationDetents([.medium])
         }
-        // Alert for lock/wake failures
         .alert(scooterManager.lockAlertMessage, isPresented: $scooterManager.showLockAlert) {
-            Button("Ignore", role: .destructive) {
-                // do nothing
-            }
-            Button("Retry") {
-                scooterManager.restartAndLock()
-            }
+            Button("Ignore", role: .destructive) {}
+            Button("Retry") { scooterManager.restartAndLock() }
         }
-        .onAppear() {
+        .onAppear {
             scooterManager.startScanning()
         }
+    }
+
+    // MARK: - Masthead
+
+    private var masthead: some View {
+        HStack(alignment: .center, spacing: 10) {
+            HStack(spacing: 7) {
+                Text("unu")
+                    .font(.system(size: 36, weight: .black, design: .rounded))
+                    .foregroundStyle(DeckTheme.ink)
+                    .onLongPressGesture { showDebugMenu = true }
+
+                Text("PRO")
+                    .deckLabel(14)
+                    .foregroundStyle(DeckTheme.onLime)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(RoundedRectangle(cornerRadius: 6).fill(DeckTheme.lime))
+                    .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(DeckTheme.ink, lineWidth: 2))
+            }
+
+            Spacer()
+
+            statusChip
+        }
+    }
+
+    private var statusChip: some View {
+        HStack(spacing: 7) {
+            Circle()
+                .fill(scooterManager.isConnected ? DeckTheme.lime : DeckTheme.signal)
+                .frame(width: 9, height: 9)
+                .overlay(Circle().strokeBorder(DeckTheme.ink, lineWidth: 1.5))
+
+            Text((scooterManager.isConnected ? "live" : scooterManager.statusMessage).uppercased())
+                .deckLabel(12, weight: .bold)
+                .foregroundStyle(DeckTheme.ink)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background(RoundedRectangle(cornerRadius: 8).fill(DeckTheme.panel))
+        .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(DeckTheme.ink, lineWidth: 2))
+    }
+
+    // MARK: - Scooter display panel
+
+    private var displayPanel: some View {
+        VStack(spacing: 0) {
+            HStack {
+                Text("YOUR RIDE")
+                    .deckLabel(12)
+                    .foregroundStyle(DeckTheme.ink)
+
+                Spacer()
+
+                HStack(spacing: 5) {
+                    Image(systemName: scooterManager.cbbIsCharging ? "bolt.fill" : "battery.100")
+                        .font(.system(size: 11, weight: .black))
+                    Text(scooterManager.isConnected ? "\(scooterManager.primaryBatteryPercent)%" : "--")
+                        .deckLabel(12)
+                }
+                .foregroundStyle(DeckTheme.onLime)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(RoundedRectangle(cornerRadius: 6).fill(DeckTheme.lime))
+                .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(DeckTheme.ink, lineWidth: 2))
+            }
+            .padding(.horizontal, 16)
+            .padding(.top, 14)
+
+            Image("scooter")
+                .resizable()
+                .scaledToFit()
+                .frame(maxWidth: .infinity)
+                .frame(height: 188)
+                .padding(.horizontal, 14)
+                .padding(.bottom, 10)
+        }
+        .deckPanel(fill: DeckTheme.panel)
+    }
+
+    // MARK: - Slide to lock / unlock
+
+    private var lockSlider: some View {
+        let knob: CGFloat = 58
+        let pad: CGFloat = 6
+        let unlocked = !scooterManager.isLocked
+
+        return GeometryReader { geo in
+            let maxX = max(0, geo.size.width - knob - pad * 2)
+
+            ZStack {
+                // hard shadow
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(DeckTheme.ink)
+                    .offset(x: DeckTheme.drop, y: DeckTheme.drop)
+
+                // track
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(unlocked ? DeckTheme.lime : DeckTheme.panel)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            .strokeBorder(DeckTheme.ink, lineWidth: DeckTheme.border)
+                    )
+
+                Text(unlocked ? "SLIDE TO LOCK" : "SLIDE TO UNLOCK")
+                    .deckLabel(15)
+                    .foregroundStyle(unlocked ? DeckTheme.onLime : DeckTheme.ink)
+                    .offset(x: knob / 2)
+
+                // knob
+                HStack {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .fill(DeckTheme.ink)
+                        Image(systemName: scooterManager.isLocked ? "lock.fill" : "lock.open.fill")
+                            .font(.system(size: 21, weight: .heavy))
+                            .foregroundStyle(DeckTheme.paper)
+                    }
+                    .frame(width: knob, height: knob)
+                    .offset(x: dragState.translation)
+                    .gesture(
+                        DragGesture()
+                            .updating($dragState) { value, state, _ in
+                                let t = min(max(0, value.translation.width), maxX)
+                                state = .dragging(translation: t)
+                            }
+                            .onEnded { value in
+                                if value.translation.width > geo.size.width * 0.5 {
+                                    if scooterManager.isLocked {
+                                        scooterManager.unlock()
+                                    } else {
+                                        scooterManager.lock()
+                                    }
+                                }
+                            }
+                    )
+
+                    Spacer()
+                }
+                .padding(pad)
+            }
+        }
+        .frame(height: 70)
+    }
+
+    // MARK: - Action tiles
+
+    private var hazardTile: some View {
+        let on = scooterManager.hazardLightsOn
+        return Button {
+            scooterManager.sendBlinkerCommand(state: on ? "off" : "both")
+            scooterManager.hazardLightsOn.toggle()
+        } label: {
+            VStack(spacing: 10) {
+                BlinkingImage(systemName: "exclamationmark.triangle.fill",
+                              isBlinking: on,
+                              color: on ? DeckTheme.onSignal : DeckTheme.ink)
+                Text(on ? "HAZARDS ON" : "HAZARDS")
+                    .deckLabel(13)
+                    .foregroundStyle(on ? DeckTheme.onSignal : DeckTheme.ink)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 20)
+        }
+        .buttonStyle(DeckTileStyle(fill: on ? DeckTheme.signal : DeckTheme.panel))
+    }
+
+    private var storageTile: some View {
+        Button {
+            scooterManager.openSeat()
+        } label: {
+            VStack(spacing: 10) {
+                Image(systemName: "shippingbox.fill")
+                    .font(.system(size: 24, weight: .black))
+                    .foregroundStyle(DeckTheme.ink)
+                Text("STORAGE")
+                    .deckLabel(13)
+                    .foregroundStyle(DeckTheme.ink)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 20)
+        }
+        .buttonStyle(DeckTileStyle(fill: DeckTheme.panel))
+    }
+
+    // MARK: - Battery bar
+
+    private var batteryBar: some View {
+        Button {
+            showBatteryDetails = true
+        } label: {
+            HStack(spacing: 14) {
+                Image(systemName: "bolt.fill")
+                    .font(.system(size: 18, weight: .black))
+                    .foregroundStyle(DeckTheme.ink)
+
+                Text("BATTERY")
+                    .deckLabel(14)
+                    .foregroundStyle(DeckTheme.ink)
+
+                Spacer()
+
+                gauge(scooterManager.isConnected ? scooterManager.primaryBatteryPercent : 0)
+
+                Text(scooterManager.isConnected ? "\(scooterManager.primaryBatteryPercent)%" : "--")
+                    .deckLabel(15)
+                    .foregroundStyle(DeckTheme.ink)
+                    .frame(width: 48, alignment: .trailing)
+
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 14, weight: .black))
+                    .foregroundStyle(DeckTheme.ink)
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 18)
+        }
+        .buttonStyle(DeckTileStyle(fill: DeckTheme.panel))
+    }
+
+    private func gauge(_ pct: Int) -> some View {
+        let clamped = CGFloat(max(0, min(100, pct))) / 100
+        return GeometryReader { g in
+            ZStack(alignment: .leading) {
+                RoundedRectangle(cornerRadius: 5).fill(DeckTheme.paper)
+                RoundedRectangle(cornerRadius: 5)
+                    .fill(DeckTheme.lime)
+                    .frame(width: g.size.width * clamped)
+            }
+            .overlay(RoundedRectangle(cornerRadius: 5).strokeBorder(DeckTheme.ink, lineWidth: 2))
+        }
+        .frame(width: 64, height: 22)
     }
 }
 
@@ -220,21 +311,21 @@ struct ScooterControlsView: View {
 struct BlinkingImage: View {
     let systemName: String
     let isBlinking: Bool
-    
+    var color: Color = DeckTheme.ink
+
     @State private var isVisible = true
-    
+
     var body: some View {
         Image(systemName: systemName)
-            .font(.title2)
-            .foregroundStyle(.yellow)
-            .opacity(isBlinking ? (isVisible ? 1 : 0.3) : 1)
+            .font(.system(size: 24, weight: .black))
+            .foregroundStyle(color)
+            .opacity(isBlinking ? (isVisible ? 1 : 0.25) : 1)
             .onChange(of: isBlinking) { _, newValue in
                 if newValue {
-                    withAnimation(Animation.easeInOut(duration: 0.5).repeatForever()) {
+                    withAnimation(.easeInOut(duration: 0.5).repeatForever()) {
                         isVisible.toggle()
                     }
                 } else {
-                    // Stop blinking
                     withAnimation(.none) {
                         isVisible = true
                     }
