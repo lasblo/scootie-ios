@@ -48,6 +48,10 @@ class UnuScooterManager: NSObject, ObservableObject {
     // scooter is close enough.
     @Published private(set) var autoUnlockArmed = false
     private var autoUnlockPolling = false
+    // Whether we've actually read the scooter's lock state this connection.
+    // Guards against acting on the stale default (isLocked == true) before the
+    // handlebar characteristic has reported in.
+    private var lockStateKnown = false
 
     // MARK: - Settings (read from UserDefaults)
 
@@ -60,6 +64,19 @@ class UnuScooterManager: NSObject, ObservableObject {
     }
     private var autoOpenSeatOnUnlock: Bool {
         UserDefaults.standard.bool(forKey: SettingsKeys.autoOpenSeat)
+    }
+    private var autoUnlockCooldownSeconds: Int {
+        (UserDefaults.standard.object(forKey: SettingsKeys.autoUnlockCooldown) as? Int)
+            ?? SettingsKeys.defaultCooldownSeconds
+    }
+    /// True while within the no-auto-unlock window after a deliberate app lock,
+    /// so we don't immediately re-unlock what the user just locked.
+    private var inLockCooldown: Bool {
+        guard let t = UserDefaults.standard.object(forKey: SettingsKeys.lastAppLock) as? Double else { return false }
+        return Date().timeIntervalSince1970 - t < Double(autoUnlockCooldownSeconds)
+    }
+    private func recordAppLock() {
+        UserDefaults.standard.set(Date().timeIntervalSince1970, forKey: SettingsKeys.lastAppLock)
     }
 
     // Identifier of the paired scooter, persisted so we can reconnect directly
@@ -201,7 +218,8 @@ class UnuScooterManager: NSObject, ObservableObject {
         UserDefaults.standard.register(defaults: [
             SettingsKeys.autoUnlock: true,
             SettingsKeys.autoOpenSeat: true,
-            SettingsKeys.autoUnlockMinRSSI: SettingsKeys.defaultMinRSSI
+            SettingsKeys.autoUnlockMinRSSI: SettingsKeys.defaultMinRSSI,
+            SettingsKeys.autoUnlockCooldown: SettingsKeys.defaultCooldownSeconds
         ])
         if let t = UserDefaults.standard.object(forKey: SettingsKeys.lastSeen) as? Double {
             lastSeen = Date(timeIntervalSince1970: t)
@@ -257,7 +275,8 @@ class UnuScooterManager: NSObject, ObservableObject {
     }
 
     private func armAutoUnlock() {
-        guard autoUnlockEnabled else { return }
+        // Don't arm during the post-lock cooldown.
+        guard autoUnlockEnabled, !inLockCooldown else { return }
         autoUnlockArmed = true
         startAutoUnlockPolling()
     }
@@ -276,7 +295,9 @@ class UnuScooterManager: NSObject, ObservableObject {
         guard autoUnlockArmed else { autoUnlockPolling = false; return }
 
         if isConnected {
-            if isLocked {
+            if !lockStateKnown {
+                // Wait for the real lock state — don't act on the stale default.
+            } else if isLocked {
                 scooter?.readRSSI()      // evaluated in didReadRSSI
             } else {
                 autoUnlockArmed = false  // already unlocked — nothing to do
@@ -428,7 +449,12 @@ class UnuScooterManager: NSObject, ObservableObject {
                 scooter.writeValue(data, for: characteristic, type: .withResponse)
                 statusMessage = "Locking..."
                 print("🔒 Sending lock command...")
-                
+
+                // A deliberate app lock cancels any pending auto-unlock and
+                // starts the cooldown so we don't re-unlock right after.
+                autoUnlockArmed = false
+                recordAppLock()
+
                 // Check handlebar after 2s
                 try? await Task.sleep(nanoseconds: 2_000_000_000)
                 await verifyHandlebarState()
@@ -691,6 +717,7 @@ class UnuScooterManager: NSObject, ObservableObject {
     }
     
     private func clearCharacteristics() {
+        lockStateKnown = false
         commandCharacteristic = nil
         stateCharacteristic = nil
         powerStateCharacteristic = nil
@@ -799,6 +826,7 @@ extension UnuScooterManager: @preconcurrency CBCentralManagerDelegate {
         // Staged discovery: command + main first so lock/unlock and state are
         // ready ASAP; battery services follow (see didDiscoverCharacteristics).
         didStageRestDiscovery = false
+        lockStateKnown = false
         peripheral.discoverServices([commandServiceUUID, mainServiceUUID])
     }
     
@@ -969,9 +997,12 @@ extension UnuScooterManager: @preconcurrency CBPeripheralDelegate {
         // Only acts while auto-unlock is armed. A reading below the threshold is
         // ignored (the poll keeps going as the user gets closer) — we only
         // disarm + unlock once the scooter is actually within range.
-        guard autoUnlockArmed, error == nil else { return }
+        // Only when armed, the lock state is actually known + locked, and we're
+        // not in the post-lock cooldown.
+        guard autoUnlockArmed, error == nil,
+              lockStateKnown, isLocked, !inLockCooldown else { return }
         print("📶 Auto-unlock RSSI \(RSSI) (min \(autoUnlockMinRSSI))")
-        if RSSI.intValue >= autoUnlockMinRSSI && isLocked {
+        if RSSI.intValue >= autoUnlockMinRSSI {
             autoUnlockArmed = false
             unlock(wake: false)
         }
@@ -1012,6 +1043,7 @@ extension UnuScooterManager: @preconcurrency CBPeripheralDelegate {
         switch characteristic.uuid {
         case handlebarCharUUID:
             isLocked = (trimmed != "unlocked")
+            lockStateKnown = true
         case stateCharUUID:
             currentState = ScooterState(fromString: trimmed)
             updateStatusMessage()

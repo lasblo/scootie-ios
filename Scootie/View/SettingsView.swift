@@ -14,9 +14,13 @@ enum SettingsKeys {
     static let autoOpenSeat = "autoOpenSeatOnUnlock"
     static let lastSeen = "scooterLastSeen"              // Double, since 1970
     static let scooterUUID = "scooterPeripheralUUID"     // String, persisted to skip scanning
+    static let autoUnlockCooldown = "autoUnlockCooldownSeconds"  // Int seconds
+    static let lastAppLock = "lastAppLockTime"           // Double, since 1970
 
     static let defaultMinRSSI = -70
     static let minRSSIRange: ClosedRange<Double> = -85...(-55)
+    static let defaultCooldownSeconds = 300              // 5 min
+    static let cooldownMinutesRange: ClosedRange<Double> = 1...15
 }
 
 struct SettingsView: View {
@@ -25,6 +29,7 @@ struct SettingsView: View {
     @AppStorage(SettingsKeys.autoUnlock) private var autoUnlock = true
     @AppStorage(SettingsKeys.autoUnlockMinRSSI) private var minRSSI = SettingsKeys.defaultMinRSSI
     @AppStorage(SettingsKeys.autoOpenSeat) private var autoOpenSeat = true
+    @AppStorage(SettingsKeys.autoUnlockCooldown) private var cooldown = SettingsKeys.defaultCooldownSeconds
 
     var body: some View {
         ZStack {
@@ -38,7 +43,10 @@ struct SettingsView: View {
                     toggleRow(title: "AUTO-UNLOCK ON OPEN",
                               subtitle: "Unlock the scooter when you open the app.",
                               isOn: $autoUnlock)
-                    if autoUnlock { signalPanel }
+                    if autoUnlock {
+                        signalPanel
+                        cooldownPanel
+                    }
 
                     toggleRow(title: "OPEN SEAT ON UNLOCK",
                               subtitle: "Pop the seatbox whenever the scooter unlocks.",
@@ -140,6 +148,42 @@ struct SettingsView: View {
             }
 
             Text("Only auto-unlock when the scooter is at least this close.")
+                .font(.footnote.weight(.medium))
+                .foregroundStyle(DeckTheme.ink.opacity(0.6))
+        }
+        .padding(16)
+        .deckPanel(fill: DeckTheme.panel)
+    }
+
+    // MARK: - Re-lock cooldown
+
+    private var cooldownPanel: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack {
+                Text("RE-LOCK COOLDOWN")
+                    .deckLabel(13)
+                    .foregroundStyle(DeckTheme.ink)
+                Spacer()
+                Text("\(cooldown / 60) min")
+                    .deckLabel(14)
+                    .foregroundStyle(DeckTheme.onLime)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(RoundedRectangle(cornerRadius: 6).fill(DeckTheme.lime))
+                    .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(DeckTheme.ink, lineWidth: 2))
+            }
+
+            Slider(
+                value: Binding(
+                    get: { Double(cooldown / 60) },
+                    set: { cooldown = Int($0) * 60 }
+                ),
+                in: SettingsKeys.cooldownMinutesRange,
+                step: 1
+            )
+            .tint(DeckTheme.lime)
+
+            Text("After locking from the app, don't auto-unlock again for this long.")
                 .font(.footnote.weight(.medium))
                 .foregroundStyle(DeckTheme.ink.opacity(0.6))
         }
