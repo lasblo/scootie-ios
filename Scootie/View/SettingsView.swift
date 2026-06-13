@@ -13,6 +13,7 @@ enum SettingsKeys {
     static let autoUnlockMinRSSI = "autoUnlockMinRSSI"   // default -70
     static let autoOpenSeat = "autoOpenSeatOnUnlock"
     static let lastSeen = "scooterLastSeen"              // Double, since 1970
+    static let scooterUUID = "scooterPeripheralUUID"     // String, persisted to skip scanning
 
     static let defaultMinRSSI = -70
     static let minRSSIRange: ClosedRange<Double> = -85...(-55)

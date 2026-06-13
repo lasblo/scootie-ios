@@ -62,6 +62,13 @@ class UnuScooterManager: NSObject, ObservableObject {
         UserDefaults.standard.bool(forKey: SettingsKeys.autoOpenSeat)
     }
 
+    // Identifier of the paired scooter, persisted so we can reconnect directly
+    // (retrievePeripherals) instead of scanning every launch.
+    private var savedScooterUUID: UUID? {
+        get { UserDefaults.standard.string(forKey: SettingsKeys.scooterUUID).flatMap(UUID.init) }
+        set { UserDefaults.standard.set(newValue?.uuidString, forKey: SettingsKeys.scooterUUID) }
+    }
+
     // MARK: - Private Properties
 
     private var centralManager: CBCentralManager!
@@ -227,16 +234,8 @@ class UnuScooterManager: NSObject, ObservableObject {
                 // keeps polling until the scooter is close enough or cancelled).
                 if self.autoUnlockEnabled { self.armAutoUnlock() }
 
-                guard self.hasCompletedOnboarding,
-                      self.centralManager.state == .poweredOn else { return }
-
-                if !self.isConnected {
-                    if let scooter = self.scooter {
-                        self.centralManager.connect(scooter, options: nil)
-                    } else {
-                        self.startScanning()
-                    }
-                }
+                guard self.hasCompletedOnboarding else { return }
+                self.beginConnecting()
             }
             .store(in: &cancellables)
 
@@ -284,8 +283,8 @@ class UnuScooterManager: NSObject, ObservableObject {
                 autoUnlockPolling = false
                 return
             }
-        } else if !isScanning, scooter == nil, centralManager.state == .poweredOn {
-            startScanning()              // keep looking for it as we get closer
+        } else {
+            beginConnecting()            // reconnect/scan as we get closer
         }
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { [weak self] in
@@ -300,6 +299,48 @@ class UnuScooterManager: NSObject, ObservableObject {
         startStateUpdateTimer()
     }
     
+    /// Preferred entry point: reconnect to the known scooter directly (no scan)
+    /// when we can, otherwise scan. Reconnecting a retrieved peripheral is far
+    /// faster than scanning for it every time.
+    func beginConnecting() {
+        guard !isConnected else { return }
+        guard centralManager.state == .poweredOn else { return }   // resumes from .poweredOn
+        guard connectionPhase != .connecting, !isScanning else { return }   // already working
+
+        if let known = knownPeripheral() {
+            connectTo(known)
+        } else {
+            initiateScanning()
+        }
+    }
+
+    private func knownPeripheral() -> CBPeripheral? {
+        if let existing = scooter { return existing }
+        guard let uuid = savedScooterUUID else { return nil }
+        // Already connected at the system level? Grab it directly.
+        let connected = centralManager.retrieveConnectedPeripherals(withServices: [commandServiceUUID])
+        if let p = connected.first(where: { $0.identifier == uuid }) { return p }
+        // Known but not connected — retrieve by id and connect without scanning.
+        return centralManager.retrievePeripherals(withIdentifiers: [uuid]).first
+    }
+
+    private func connectTo(_ peripheral: CBPeripheral) {
+        scooter = peripheral
+        peripheral.delegate = self
+        statusMessage = "Connecting..."
+        connectionPhase = .connecting
+        centralManager.connect(peripheral, options: nil)
+
+        // If a direct connect doesn't land (scooter off / out of range / stale
+        // identifier), fall back to a scan to self-heal.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 15) { [weak self] in
+            guard let self = self,
+                  self.connectionPhase == .connecting, !self.isConnected else { return }
+            self.centralManager.cancelPeripheralConnection(peripheral)
+            self.initiateScanning()
+        }
+    }
+
     func startScanning() {
         pendingStartScan = true
         if centralManager.state == .poweredOn {
@@ -701,15 +742,9 @@ extension UnuScooterManager: @preconcurrency CBCentralManagerDelegate {
             print("❌ Bluetooth state unknown")
         case .poweredOn:
             print("ℹ️ Bluetooth is on")
-            // Bluetooth (re)gained — reconnect if we were connected before.
+            // Bluetooth (re)gained — reconnect to the known scooter (no scan).
             if hasCompletedOnboarding && !isConnected {
-                if let scooter = scooter {
-                    statusMessage = "Reconnecting…"
-                    connectionPhase = .connecting
-                    centralManager.connect(scooter, options: nil)
-                } else if !isScanning && !pendingStartScan {
-                    startScanning()
-                }
+                beginConnecting()
             } else if !isConnected && !isScanning && !pendingStartScan {
                 statusMessage = "Ready"
             }
@@ -756,6 +791,8 @@ extension UnuScooterManager: @preconcurrency CBCentralManagerDelegate {
         print("🔌 Initial connection to scooter established")
         peripheral.delegate = self
         statusMessage = "Verifying connection..."
+        // Remember this scooter so future launches skip scanning.
+        savedScooterUUID = peripheral.identifier
         // Backstop: keep verifying/repairing the connection while we're connected.
         startStateUpdateTimer()
 
