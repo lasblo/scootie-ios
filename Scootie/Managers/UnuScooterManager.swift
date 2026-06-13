@@ -66,6 +66,9 @@ class UnuScooterManager: NSObject, ObservableObject {
 
     private var centralManager: CBCentralManager!
     private var scooter: CBPeripheral?
+
+    // Staged discovery: command+main services first (fast unlock), battery after.
+    private var didStageRestDiscovery = false
     
     // Characteristics
     private var commandCharacteristic: CBCharacteristic?
@@ -756,15 +759,10 @@ extension UnuScooterManager: @preconcurrency CBCentralManagerDelegate {
         // Backstop: keep verifying/repairing the connection while we're connected.
         startStateUpdateTimer()
 
-        // Discover relevant services
-        peripheral.discoverServices([
-            commandServiceUUID,
-            mainServiceUUID,
-            powerServiceUUID,
-            auxServiceUUID,
-            cbbServiceUUID,
-            primaryServiceUUID
-        ])
+        // Staged discovery: command + main first so lock/unlock and state are
+        // ready ASAP; battery services follow (see didDiscoverCharacteristics).
+        didStageRestDiscovery = false
+        peripheral.discoverServices([commandServiceUUID, mainServiceUUID])
     }
     
     func centralManager(_ central: CBCentralManager,
@@ -906,8 +904,16 @@ extension UnuScooterManager: @preconcurrency CBPeripheralDelegate {
                 break
             }
         }
+
+        // Once the main service (state + handlebar) is in, lock/unlock is ready —
+        // now discover the battery services in the background so they don't
+        // delay the first connect/unlock.
+        if service.uuid == mainServiceUUID && !didStageRestDiscovery {
+            didStageRestDiscovery = true
+            peripheral.discoverServices([powerServiceUUID, auxServiceUUID, cbbServiceUUID, primaryServiceUUID])
+        }
     }
-    
+
     func peripheral(_ peripheral: CBPeripheral,
                     didUpdateNotificationStateFor characteristic: CBCharacteristic,
                     error: Error?) {
