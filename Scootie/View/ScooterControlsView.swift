@@ -97,21 +97,10 @@ struct ScooterControlsView: View {
 
     private var masthead: some View {
         HStack(alignment: .center, spacing: 10) {
-            HStack(spacing: 7) {
-                Text("unu")
-                    .font(.system(size: 36, weight: .black, design: .rounded))
-                    .foregroundStyle(DeckTheme.ink)
-                    .onLongPressGesture { showDebugMenu = true }
-
-                Text("PRO")
-                    .deckLabel(14)
-                    .foregroundStyle(DeckTheme.onLime)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(RoundedRectangle(cornerRadius: 6).fill(DeckTheme.lime))
-                    .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(DeckTheme.ink, lineWidth: 2))
-                    .offset(y: 3)   // optically center against the lowercase wordmark
-            }
+            Text("Scootie")
+                .font(.system(size: 32, weight: .black, design: .rounded))
+                .foregroundStyle(DeckTheme.ink)
+                .onLongPressGesture { showDebugMenu = true }
 
             Spacer()
 

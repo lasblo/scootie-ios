@@ -55,18 +55,10 @@ struct WelcomeScreen: View {
     // MARK: - Masthead
 
     private var masthead: some View {
-        HStack(spacing: 7) {
-            Text("unu")
-                .font(.system(size: 36, weight: .black, design: .rounded))
+        HStack {
+            Text("Scootie")
+                .font(.system(size: 34, weight: .black, design: .rounded))
                 .foregroundStyle(DeckTheme.ink)
-            Text("PRO")
-                .deckLabel(14)
-                .foregroundStyle(DeckTheme.onLime)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-                .background(RoundedRectangle(cornerRadius: 6).fill(DeckTheme.lime))
-                .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(DeckTheme.ink, lineWidth: 2))
-                .offset(y: 3)   // optically center against the lowercase wordmark
             Spacer()
         }
     }
