@@ -1042,11 +1042,17 @@ extension UnuScooterManager: @preconcurrency CBPeripheralDelegate {
         
         switch characteristic.uuid {
         case handlebarCharUUID:
-            isLocked = (trimmed != "unlocked")
-            lockStateKnown = true
+            // Ignore empty/garbage reads — treating "" as locked would make
+            // auto-unlock fire (and open the seat) on every app open.
+            if !trimmed.isEmpty {
+                isLocked = (trimmed != "unlocked")
+                lockStateKnown = true
+            }
         case stateCharUUID:
-            currentState = ScooterState(fromString: trimmed)
-            updateStatusMessage()
+            if !trimmed.isEmpty {
+                currentState = ScooterState(fromString: trimmed)
+                updateStatusMessage()
+            }
         case powerStateCharUUID:
             // e.g., "running", "charging", ...
             break
