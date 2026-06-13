@@ -338,10 +338,15 @@ class UnuScooterManager: NSObject, ObservableObject {
     }
     
     // Lock/Unlock commands
-    func unlock() {
+    func unlock(wake: Bool = true) {
         Task {
-            guard await ensureScooterAwakeIfPossible() else { return }
-            
+            // Auto-unlock passes wake:false so it never blocks on the wake-and-
+            // wait — if we're connected the scooter is responsive enough to take
+            // the unlock immediately.
+            if wake {
+                guard await ensureScooterAwakeIfPossible() else { return }
+            }
+
             guard let characteristic = commandCharacteristic,
                   let scooter = scooter else {
                 return
@@ -456,9 +461,12 @@ class UnuScooterManager: NSObject, ObservableObject {
     /// Ensures the scooter is awake if possible, returning false if it fails to wake.
     private func ensureScooterAwakeIfPossible() async -> Bool {
         let canWake = (hibernationCommandCharacteristic != nil)
-        if !awakeStates.contains(currentState) && canWake {
+        // Don't treat a stale state (e.g. .disconnected right after connect,
+        // before the state characteristic has been read) as "asleep".
+        let asleep = !awakeStates.contains(currentState) && currentState != .disconnected
+        if asleep && canWake {
             await wakeUpScooter()
-            let awake = await waitForScooterState(.standby, timeout: 30)
+            let awake = await waitForScooterState(.standby, timeout: 12)
             if !awake {
                 statusMessage = "Could not wake scooter."
                 print("⚠️ Could not wake scooter to standby.")
@@ -922,7 +930,7 @@ extension UnuScooterManager: @preconcurrency CBPeripheralDelegate {
         print("📶 Auto-unlock RSSI \(RSSI) (min \(autoUnlockMinRSSI))")
         if RSSI.intValue >= autoUnlockMinRSSI && isLocked {
             autoUnlockArmed = false
-            unlock()
+            unlock(wake: false)
         }
     }
 
