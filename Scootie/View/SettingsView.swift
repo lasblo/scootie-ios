@@ -10,11 +10,11 @@ import SwiftUI
 
 enum SettingsKeys {
     static let autoUnlock = "autoUnlockOnOpen"
-    static let autoUnlockMinRSSI = "autoUnlockMinRSSI"   // default -65
+    static let autoUnlockMinRSSI = "autoUnlockMinRSSI"   // default -70
     static let autoOpenSeat = "autoOpenSeatOnUnlock"
     static let lastSeen = "scooterLastSeen"              // Double, since 1970
 
-    static let defaultMinRSSI = -65
+    static let defaultMinRSSI = -70
     static let minRSSIRange: ClosedRange<Double> = -85...(-55)
 }
 
