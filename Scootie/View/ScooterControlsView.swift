@@ -172,7 +172,7 @@ struct ScooterControlsView: View {
                 .minimumScaleFactor(0.7)
         }
         .padding(.horizontal, 12)
-        .padding(.vertical, 8)
+        .frame(height: 40)   // match the 40pt settings / retry buttons
         .background(RoundedRectangle(cornerRadius: 8).fill(DeckTheme.panel))
         .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(DeckTheme.ink, lineWidth: 2))
     }
