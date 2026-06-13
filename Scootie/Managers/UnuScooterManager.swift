@@ -43,7 +43,11 @@ class UnuScooterManager: NSObject, ObservableObject {
     @Published private(set) var lastSeen: Date?
 
     // Armed on app-open when auto-unlock is enabled; consumed once we read RSSI.
-    private var pendingAutoUnlock = false
+    // Auto-unlock is "armed" from app-open until it fires, the user cancels,
+    // or the app backgrounds. While armed we poll RSSI and unlock once the
+    // scooter is close enough.
+    @Published private(set) var autoUnlockArmed = false
+    private var autoUnlockPolling = false
 
     // MARK: - Settings (read from UserDefaults)
 
@@ -209,32 +213,76 @@ class UnuScooterManager: NSObject, ObservableObject {
             .publisher(for: UIApplication.didBecomeActiveNotification)
             .sink { [weak self] _ in
                 guard let self = self else { return }
-                // Arm auto-unlock for this app-open if enabled.
-                if self.autoUnlockEnabled { self.pendingAutoUnlock = true }
+                // Arm auto-unlock for this app-open if enabled (stays armed and
+                // keeps polling until the scooter is close enough or cancelled).
+                if self.autoUnlockEnabled { self.armAutoUnlock() }
 
                 guard self.hasCompletedOnboarding,
                       self.centralManager.state == .poweredOn else { return }
 
-                if self.isConnected {
-                    // Already connected — evaluate auto-unlock right away.
-                    if self.pendingAutoUnlock { self.scooter?.readRSSI() }
-                } else if let scooter = self.scooter {
-                    self.centralManager.connect(scooter, options: nil)
-                } else {
-                    self.startScanning()
+                if !self.isConnected {
+                    if let scooter = self.scooter {
+                        self.centralManager.connect(scooter, options: nil)
+                    } else {
+                        self.startScanning()
+                    }
                 }
             }
             .store(in: &cancellables)
-        
-        // Stop scanning when entering background
+
+        // Stop scanning and disarm auto-unlock when entering background.
         NotificationCenter.default
             .publisher(for: UIApplication.didEnterBackgroundNotification)
             .sink { [weak self] _ in
+                self?.autoUnlockArmed = false
                 self?.stopScanning()
             }
             .store(in: &cancellables)
     }
-    
+
+    // MARK: - Auto-unlock
+
+    /// Cancel a pending auto-unlock (user-facing).
+    func cancelAutoUnlock() {
+        autoUnlockArmed = false
+    }
+
+    private func armAutoUnlock() {
+        guard autoUnlockEnabled else { return }
+        autoUnlockArmed = true
+        startAutoUnlockPolling()
+    }
+
+    private func startAutoUnlockPolling() {
+        guard !autoUnlockPolling else { return }
+        autoUnlockPolling = true
+        autoUnlockTick()
+    }
+
+    /// While armed: keep trying to connect as the user approaches, and once
+    /// connected, poll RSSI until the scooter is within the configured range,
+    /// then unlock. Re-evaluates continuously (not just once at connect) so it
+    /// works whether the app was opened near or far from the scooter.
+    private func autoUnlockTick() {
+        guard autoUnlockArmed else { autoUnlockPolling = false; return }
+
+        if isConnected {
+            if isLocked {
+                scooter?.readRSSI()      // evaluated in didReadRSSI
+            } else {
+                autoUnlockArmed = false  // already unlocked — nothing to do
+                autoUnlockPolling = false
+                return
+            }
+        } else if !isScanning, scooter == nil, centralManager.state == .poweredOn {
+            startScanning()              // keep looking for it as we get closer
+        }
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { [weak self] in
+            self?.autoUnlockTick()
+        }
+    }
+
     // MARK: - Public Methods
     
     func handlePostOnboardingConnection() {
@@ -860,12 +908,13 @@ extension UnuScooterManager: @preconcurrency CBPeripheralDelegate {
     }
 
     func peripheral(_ peripheral: CBPeripheral, didReadRSSI RSSI: NSNumber, error: Error?) {
-        // Only acts when an auto-unlock attempt is armed.
-        guard pendingAutoUnlock else { return }
-        pendingAutoUnlock = false
-        guard error == nil else { return }
+        // Only acts while auto-unlock is armed. A reading below the threshold is
+        // ignored (the poll keeps going as the user gets closer) — we only
+        // disarm + unlock once the scooter is actually within range.
+        guard autoUnlockArmed, error == nil else { return }
         print("📶 Auto-unlock RSSI \(RSSI) (min \(autoUnlockMinRSSI))")
         if RSSI.intValue >= autoUnlockMinRSSI && isLocked {
+            autoUnlockArmed = false
             unlock()
         }
     }
@@ -885,16 +934,10 @@ extension UnuScooterManager: @preconcurrency CBPeripheralDelegate {
         // If we get here, we have successful communication with the scooter
         needsPairing = false
         isPairing = false
-        let justConnected = !isConnected
         isConnected = true
         connectionPhase = .connected
         markSeen()
         print("🔓 Pairing successful, connection established")
-
-        // On the connect transition, evaluate auto-unlock if it was armed.
-        if justConnected && pendingAutoUnlock {
-            peripheral.readRSSI()
-        }
 
         guard let data = characteristic.value else {
             print("⚠️ No data for characteristic \(characteristic.uuid)")

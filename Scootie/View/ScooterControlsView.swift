@@ -37,6 +37,10 @@ struct ScooterControlsView: View {
                 ScrollView {
                     VStack(spacing: 22) {
                         masthead
+                        if scooterManager.autoUnlockArmed {
+                            autoUnlockBanner
+                                .transition(.move(edge: .top).combined(with: .opacity))
+                        }
                         displayPanel          // hero card grows to fill the height
                         HStack(spacing: 14) {
                             storageTile
@@ -48,6 +52,7 @@ struct ScooterControlsView: View {
                     .padding(.top, 6)
                     .padding(.bottom, 12)
                     .frame(minHeight: geo.size.height)
+                    .animation(.spring(response: 0.4, dampingFraction: 0.85), value: scooterManager.autoUnlockArmed)
                 }
                 .scrollBounceBehavior(.basedOnSize)
                 .scrollIndicators(.hidden)
@@ -170,6 +175,42 @@ struct ScooterControlsView: View {
         .padding(.vertical, 8)
         .background(RoundedRectangle(cornerRadius: 8).fill(DeckTheme.panel))
         .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(DeckTheme.ink, lineWidth: 2))
+    }
+
+    // MARK: - Auto-unlock banner
+
+    private var autoUnlockBanner: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "lock.open.fill")
+                .font(.system(size: 17, weight: .black))
+                .foregroundStyle(DeckTheme.onLime)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text("AUTO-UNLOCK ARMED")
+                    .deckLabel(12)
+                    .foregroundStyle(DeckTheme.onLime)
+                Text(scooterManager.isConnected
+                     ? "Unlocking as soon as you're close"
+                     : "Unlocks once connected & you're close")
+                    .font(.caption.weight(.medium))
+                    .foregroundStyle(DeckTheme.onLime.opacity(0.7))
+            }
+
+            Spacer(minLength: 8)
+
+            Button { scooterManager.cancelAutoUnlock() } label: {
+                Text("CANCEL")
+                    .deckLabel(12)
+                    .foregroundStyle(DeckTheme.onLime)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(DeckTheme.onLime, lineWidth: 2))
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 14)
+        .background(RoundedRectangle(cornerRadius: DeckTheme.radius, style: .continuous).fill(DeckTheme.lime))
+        .overlay(RoundedRectangle(cornerRadius: DeckTheme.radius, style: .continuous).strokeBorder(DeckTheme.ink, lineWidth: DeckTheme.border))
     }
 
     // MARK: - Scooter display panel
