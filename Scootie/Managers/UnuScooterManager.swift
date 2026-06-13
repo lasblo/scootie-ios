@@ -186,6 +186,13 @@ class UnuScooterManager: NSObject, ObservableObject {
     
     override init() {
         super.init()
+        // Default these ON for new installs (an existing user's explicit choice
+        // is preserved — register only fills in absent keys).
+        UserDefaults.standard.register(defaults: [
+            SettingsKeys.autoUnlock: true,
+            SettingsKeys.autoOpenSeat: true,
+            SettingsKeys.autoUnlockMinRSSI: SettingsKeys.defaultMinRSSI
+        ])
         if let t = UserDefaults.standard.object(forKey: SettingsKeys.lastSeen) as? Double {
             lastSeen = Date(timeIntervalSince1970: t)
         }

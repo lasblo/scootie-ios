@@ -21,9 +21,9 @@ enum SettingsKeys {
 struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
 
-    @AppStorage(SettingsKeys.autoUnlock) private var autoUnlock = false
+    @AppStorage(SettingsKeys.autoUnlock) private var autoUnlock = true
     @AppStorage(SettingsKeys.autoUnlockMinRSSI) private var minRSSI = SettingsKeys.defaultMinRSSI
-    @AppStorage(SettingsKeys.autoOpenSeat) private var autoOpenSeat = false
+    @AppStorage(SettingsKeys.autoOpenSeat) private var autoOpenSeat = true
 
     var body: some View {
         ZStack {
