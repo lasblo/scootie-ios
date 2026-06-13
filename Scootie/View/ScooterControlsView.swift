@@ -89,7 +89,7 @@ struct ScooterControlsView: View {
             Button("Retry") { scooterManager.restartAndLock() }
         }
         .onAppear {
-            scooterManager.startScanning()
+            scooterManager.beginConnecting()
         }
     }
 
@@ -136,7 +136,7 @@ struct ScooterControlsView: View {
 
     private var retryButton: some View {
         Button {
-            scooterManager.startScanning()
+            scooterManager.beginConnecting()
         } label: {
             Image(systemName: "arrow.clockwise")
                 .font(.system(size: 15, weight: .black))
